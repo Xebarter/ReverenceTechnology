@@ -7,12 +7,14 @@ import { mapClientProject, mapInstallment, remainingBalance } from '../../../../
 
 export const runtime = 'nodejs';
 
-async function projectId(context: { params: Promise<{ id: string }> | { id: string } }) {
-  const params = await Promise.resolve(context.params);
-  return params.id;
+type RouteContext = { params: Promise<{ id: string }> };
+
+async function projectId(context: RouteContext) {
+  const { id } = await context.params;
+  return id;
 }
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> | { id: string } }) {
+export async function POST(req: Request, context: RouteContext) {
   try {
     await requireAdmin(req);
     const id = await projectId(context);

@@ -6,12 +6,14 @@ import { mapClientProject, mapInstallment } from '../../../../server/clientProje
 
 export const runtime = 'nodejs';
 
-async function projectId(context: { params: Promise<{ id: string }> | { id: string } }) {
-  const params = await Promise.resolve(context.params);
-  return params.id;
+type RouteContext = { params: Promise<{ id: string }> };
+
+async function projectId(context: RouteContext) {
+  const { id } = await context.params;
+  return id;
 }
 
-export async function GET(req: Request, context: { params: Promise<{ id: string }> | { id: string } }) {
+export async function GET(req: Request, context: RouteContext) {
   try {
     const user = await requireFirebaseUser(req);
     const id = await projectId(context);
