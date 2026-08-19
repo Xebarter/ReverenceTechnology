@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #f4f1ea;
+  --paper-2: #ebe6dc;
+  --surface: #fffcf7;
+  --ink: #1c3d5a;
+  --ink-deep: #0e2436;
+  --muted: #5e6d7a;
+  --rule: #ddd6c8;
+  --gold: #b08d57;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #e8dcc8;
+  color: var(--ink-deep);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Quill editor — align with paper / ink */
+.ql-toolbar.ql-snow {
+  border-color: var(--rule) !important;
+  background: var(--surface);
+  font-family: inherit;
+}
+
+.ql-container.ql-snow {
+  border-color: var(--rule) !important;
+  background: var(--surface);
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.ql-editor {
+  min-height: 180px;
+}
+
+.ql-snow .ql-stroke {
+  stroke: var(--ink);
+}
+
+.ql-snow .ql-fill {
+  fill: var(--ink);
+}

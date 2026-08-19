@@ -1,0 +1,4 @@
+# Edge Functions: optional per-function overrides (see Supabase docs).
+# Example — if a function is invoked from the browser without a user JWT and OPTIONS fails with CORS:
+# [functions.get-order-status]
+# verify_jwt = false

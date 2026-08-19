@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.reverencetechnology.com/sitemap.xml
+
+# Prevent crawling of admin pages
+Disallow: /admin/
+Disallow: /admin-temp/

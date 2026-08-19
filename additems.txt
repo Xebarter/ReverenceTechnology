@@ -1,0 +1,1 @@
+(Legacy DPO integration notes removed — service requests now use POST /api/orders/create-service-order and shop checkout uses manual payment methods in Checkout.tsx.)
