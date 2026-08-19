@@ -2,8 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getRedirectResult } from "firebase/auth";
-import { firebaseAuth } from "../../../../lib/firebase";
+import { consumeRedirectResult } from "../../../../lib/firebase";
 import { Card } from "../../../../components/ui";
 
 export default function AuthCallback() {
@@ -34,7 +33,7 @@ function AuthCallbackInner() {
   useEffect(() => {
     const run = async () => {
       try {
-        await getRedirectResult(firebaseAuth);
+        await consumeRedirectResult();
         router.replace(nextPath);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Authentication failed.");

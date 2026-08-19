@@ -129,6 +129,7 @@ export async function createHostedPaymentSession(
     <BackURL>${escapeXml(input.backUrl)}</BackURL>
     <CompanyRefUnique>0</CompanyRefUnique>
     <PTL>${escapeXml(String(ptl))}</PTL>
+    <DefaultPayment>CC</DefaultPayment>
     <customerFirstName>${escapeXml(first)}</customerFirstName>
     <customerLastName>${escapeXml(last)}</customerLastName>
     <customerEmail>${escapeXml(input.customerEmail)}</customerEmail>
@@ -180,6 +181,7 @@ export function hostedPaymentPageUrl(transToken: string): string {
   const base = process.env.HOSTED_CHECKOUT_PAY_URL?.trim() || DEFAULT_PAY_PAGE;
   const u = new URL(base);
   u.searchParams.set('ID', transToken);
+  u.searchParams.set('paymenttype', 'creditcard');
   return u.toString();
 }
 

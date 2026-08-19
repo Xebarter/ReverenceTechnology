@@ -5,23 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
-  signInWithRedirect,
   updateProfile,
 } from 'firebase/auth';
 import { AnimatePresence, motion } from 'framer-motion';
-import { firebaseAuth, googleProvider } from '../lib/firebase';
+import { firebaseAuth, signInWithGoogle } from '../lib/firebase';
+import { postAuthDestination, safePostAuthPath } from '../lib/authRedirect';
 import { useUser } from '../UserContext';
 import { AlertCircle, Briefcase, FolderOpen, Loader2, Lock, Mail, ShieldCheck, User2 } from 'lucide-react';
 import { Button, FieldLabel, Input } from './ui';
 
 type Mode = 'signin' | 'signup';
-
-function prefersRedirectAuth() {
-  if (typeof window === 'undefined') return false;
-  const ua = window.navigator.userAgent || '';
-  return /Android|iPhone|iPad|iPod/i.test(ua);
-}
 
 function authMessage(err: unknown, fallback: string) {
   const code =
@@ -38,6 +31,8 @@ function authMessage(err: unknown, fallback: string) {
       return 'Use a password of at least 6 characters.';
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
+    case 'auth/popup-blocked':
+    case 'auth/redirect-cancelled-by-user':
       return 'Sign-in was cancelled.';
     case 'auth/network-request-failed':
       return 'Network error. Check your connection and try again.';
@@ -68,13 +63,12 @@ const capabilities = [
 export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading } = useUser();
+  const { user, loading, isAdmin } = useUser();
 
-  const redirectTo = useMemo(() => {
-    const raw = searchParams?.get('redirect') || '/';
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return '/';
-    return raw.startsWith('/') ? raw : '/';
-  }, [searchParams]);
+  const redirectTo = useMemo(
+    () => safePostAuthPath(searchParams?.get('redirect')),
+    [searchParams],
+  );
 
   const [mode, setMode] = useState<Mode>(searchParams?.get('mode') === 'signup' ? 'signup' : 'signin');
   const [fullName, setFullName] = useState('');
@@ -86,8 +80,11 @@ export default function AuthPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) router.replace(redirectTo);
-  }, [loading, user, router, redirectTo]);
+    if (loading || !user) return;
+    const stored = sessionStorage.getItem('auth_redirect');
+    if (stored) sessionStorage.removeItem('auth_redirect');
+    router.replace(postAuthDestination(isAdmin, stored || redirectTo));
+  }, [loading, user, isAdmin, redirectTo, router]);
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -111,7 +108,6 @@ export default function AuthPage() {
       } else {
         await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
       }
-      router.replace(redirectTo);
     } catch (err: unknown) {
       setError(authMessage(err, 'Authentication failed.'));
     } finally {
@@ -124,12 +120,8 @@ export default function AuthPage() {
     setError(null);
     setMessage(null);
     try {
-      if (prefersRedirectAuth()) {
-        await signInWithRedirect(firebaseAuth, googleProvider);
-        return;
-      }
-      await signInWithPopup(firebaseAuth, googleProvider);
-      router.replace(redirectTo);
+      sessionStorage.setItem('auth_redirect', redirectTo);
+      await signInWithGoogle();
     } catch (err: unknown) {
       setError(authMessage(err, 'Google sign-in failed.'));
       setBusy(false);

@@ -5,6 +5,8 @@ import { eq, pgInsertRow, pgSelect } from '../../../../../server/supabasePostgre
 import { requireSupabaseService } from '../../../../../server/supabaseEnv';
 import { hostedCheckoutConfigured } from '../../../../../server/hostedCheckoutGateway';
 import { attachHostedCheckoutToInstallment } from '../../../../../server/orderHostedCheckout';
+import { paytotaConfigured } from '../../../../../server/paytotaGateway';
+import { attachPaytotaToInstallment } from '../../../../../server/orderPaytota';
 import { mapClientProject, remainingBalance } from '../../../../../server/clientProjects';
 
 export const runtime = 'nodejs';
@@ -23,6 +25,7 @@ export async function POST(req: Request, context: RouteContext) {
     const body = (await req.json().catch(() => null)) as {
       installmentId?: string;
       kind?: 'balance' | 'installment';
+      method?: 'card' | 'mobile_money';
     } | null;
 
     const { url, serviceKey } = requireSupabaseService();
@@ -87,22 +90,46 @@ export async function POST(req: Request, context: RouteContext) {
       return NextResponse.json({ error: 'Choose an installment or pay the remaining balance' }, { status: 400 });
     }
 
-    if (!hostedCheckoutConfigured()) {
-      return NextResponse.json({ error: 'Online checkout is not configured' }, { status: 503 });
+    const method = body?.method === 'mobile_money' ? 'mobile_money' : 'card';
+
+    if (method === 'card') {
+      if (!hostedCheckoutConfigured()) {
+        return NextResponse.json({ error: 'Card checkout is not configured' }, { status: 503 });
+      }
+      const hostedCheckoutUrl = await attachHostedCheckoutToInstallment({
+        supabaseUrl: url,
+        serviceKey,
+        installmentId,
+        amount,
+        companyRef: `INST-${installmentId.slice(0, 8)}`,
+        customerName: project.customer_name || user.name || user.email || 'Customer',
+        customerEmail: project.customer_email || user.email || '',
+        serviceDescription: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
+      });
+      return NextResponse.json({ hostedCheckoutUrl, installmentId });
     }
 
-    const hostedCheckoutUrl = await attachHostedCheckoutToInstallment({
+    if (!paytotaConfigured()) {
+      return NextResponse.json({ error: 'Mobile money checkout is not configured' }, { status: 503 });
+    }
+
+    const mm = await attachPaytotaToInstallment({
       supabaseUrl: url,
       serviceKey,
       installmentId,
       amount,
-      companyRef: `INST-${installmentId.slice(0, 8)}`,
+      reference: `inst:${installmentId}`,
       customerName: project.customer_name || user.name || user.email || 'Customer',
       customerEmail: project.customer_email || user.email || '',
-      serviceDescription: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
+      customerPhone: project.customer_phone,
+      productName: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
     });
 
-    return NextResponse.json({ hostedCheckoutUrl, installmentId });
+    return NextResponse.json({
+      installmentId,
+      checkoutUrl: mm.checkoutUrl,
+      awaitingPhonePrompt: mm.stkSent,
+    });
   } catch (e) {
     const { body, status } = authErrorResponse(e);
     return NextResponse.json(body, { status });

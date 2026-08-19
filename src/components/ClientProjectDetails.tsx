@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CreditCard, Loader2, Smartphone } from 'lucide-react';
 import { authJson } from '../lib/authFetch';
 import { useUser } from '../UserContext';
 import { formatUgx, remainingBalance } from '../lib/projectMoney';
@@ -20,12 +20,14 @@ export default function ClientProjectDetails() {
   const [installments, setInstallments] = useState<PaymentInstallment[]>([]);
   const [busy, setBusy] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [payMethod, setPayMethod] = useState<'card' | 'mobile_money'>('mobile_money');
+  const [mmNotice, setMmNotice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const paidNotice = searchParams?.get('payment') === '1';
 
-  const load = async () => {
+  const load = async (silent = false) => {
     if (!id) return;
-    setBusy(true);
+    if (!silent) setBusy(true);
     setError(null);
     try {
       const data = await authJson<{ project: ClientProject; installments: PaymentInstallment[] }>(
@@ -36,7 +38,7 @@ export default function ClientProjectDetails() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load project.');
     } finally {
-      setBusy(false);
+      if (!silent) setBusy(false);
     }
   };
 
@@ -46,20 +48,46 @@ export default function ClientProjectDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, id]);
 
+  useEffect(() => {
+    if (!mmNotice) return;
+    const t = window.setInterval(() => {
+      load(true);
+    }, 5000);
+    return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mmNotice]);
+
   const startPay = async (payload: { installmentId?: string; kind?: 'balance' }) => {
     if (!id) return;
     setPayingId(payload.installmentId || 'balance');
     setError(null);
+    setMmNotice(false);
     try {
-      const json = await authJson<{ hostedCheckoutUrl?: string }>(`/api/client-projects/${id}/pay`, {
+      const json = await authJson<{
+        hostedCheckoutUrl?: string;
+        checkoutUrl?: string | null;
+        awaitingPhonePrompt?: boolean;
+      }>(`/api/client-projects/${id}/pay`, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, method: payMethod }),
       });
-      if (json.hostedCheckoutUrl) {
-        window.location.href = json.hostedCheckoutUrl;
+      if (payMethod === 'card') {
+        if (json.hostedCheckoutUrl) {
+          window.location.href = json.hostedCheckoutUrl;
+          return;
+        }
+        throw new Error('Card checkout did not return a payment URL');
+      }
+      if (json.awaitingPhonePrompt) {
+        setMmNotice(true);
+        setPayingId(null);
         return;
       }
-      throw new Error('Checkout did not return a payment URL');
+      if (json.checkoutUrl) {
+        window.location.href = json.checkoutUrl;
+        return;
+      }
+      throw new Error('Mobile money checkout could not be started');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Could not start payment.');
       setPayingId(null);
@@ -154,14 +182,53 @@ export default function ClientProjectDetails() {
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-4 sm:px-6">
           <h2 className="font-serif text-xl text-ink-deep">Payments</h2>
-          {remaining != null && remaining > 0 && (
-            <Button onClick={() => startPay({ kind: 'balance' })} disabled={Boolean(payingId)} size="sm">
-              {payingId === 'balance' ? 'Redirecting…' : `Pay remaining ${formatUgx(remaining)}`}
-            </Button>
-          )}
+          <div className="flex rounded-md border border-rule p-0.5">
+            <button
+              type="button"
+              onClick={() => setPayMethod('mobile_money')}
+              className={`inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
+                payMethod === 'mobile_money' ? 'bg-ink text-paper' : 'text-muted hover:text-ink'
+              }`}
+            >
+              <Smartphone size={14} />
+              Mobile money
+            </button>
+            <button
+              type="button"
+              onClick={() => setPayMethod('card')}
+              className={`inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
+                payMethod === 'card' ? 'bg-ink text-paper' : 'text-muted hover:text-ink'
+              }`}
+            >
+              <CreditCard size={14} />
+              Card
+            </button>
+          </div>
         </div>
 
         <div className="p-5 sm:p-6">
+          {mmNotice && (
+            <div className="mb-5 flex items-start gap-3 rounded-md border border-rule bg-paper px-4 py-3 text-sm text-ink">
+              <Smartphone size={18} className="mt-0.5 text-gold" />
+              Approve the PIN prompt on your phone. This page will update when Paytota confirms the payment.
+            </div>
+          )}
+          {remaining != null && remaining > 0 && (
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted">
+                {payMethod === 'mobile_money'
+                  ? 'Mobile money is collected by Paytota. Use the number on this project for the prompt.'
+                  : 'Card payments are collected securely by DPO.'}
+              </p>
+              <Button onClick={() => startPay({ kind: 'balance' })} disabled={Boolean(payingId)} size="sm">
+                {payingId === 'balance'
+                  ? payMethod === 'mobile_money'
+                    ? 'Sending prompt…'
+                    : 'Redirecting…'
+                  : `Pay remaining ${formatUgx(remaining)}`}
+              </Button>
+            </div>
+          )}
           {openInstallments.length > 0 && (
             <div className="mb-6 space-y-3">
               <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">
@@ -177,7 +244,11 @@ export default function ClientProjectDetails() {
                     {i.note && <div className="text-sm text-muted">{i.note}</div>}
                   </div>
                   <Button size="sm" onClick={() => startPay({ installmentId: i.id })} disabled={Boolean(payingId)}>
-                    {payingId === i.id ? 'Redirecting…' : 'Pay this installment'}
+                    {payingId === i.id
+                      ? payMethod === 'mobile_money'
+                        ? 'Sending prompt…'
+                        : 'Redirecting…'
+                      : 'Pay this installment'}
                   </Button>
                 </div>
               ))}

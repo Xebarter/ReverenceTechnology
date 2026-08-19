@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto';
 import { pgInsertRow } from '../../../../server/supabasePostgrest';
 import { hostedCheckoutConfigured } from '../../../../server/hostedCheckoutGateway';
 import { attachHostedCheckoutToOrder, orderDescriptionFromRow } from '../../../../server/orderHostedCheckout';
+import { paytotaConfigured } from '../../../../server/paytotaGateway';
+import { attachPaytotaToOrder } from '../../../../server/orderPaytota';
 
 export const runtime = 'nodejs';
 
@@ -20,8 +22,8 @@ export function OPTIONS() {
 
 type Body = {
   order: Record<string, unknown>;
-  /** When true and gateway env is set, returns hostedCheckoutUrl for redirect. */
   startHostedCheckout?: boolean;
+  startMobileMoney?: boolean;
 };
 
 export async function POST(req: Request) {
@@ -47,13 +49,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing order payload' }, { status: 400, headers: corsHeaders() });
     }
 
-    const startHosted = body?.startHostedCheckout === true && hostedCheckoutConfigured();
+    const startHosted = body?.startHostedCheckout === true;
+    const startMobileMoney = body?.startMobileMoney === true;
+    if (startHosted && !hostedCheckoutConfigured()) {
+      return NextResponse.json(
+        { error: 'Card payment is not available right now. Choose mobile money or try again later.' },
+        { status: 503, headers: corsHeaders() },
+      );
+    }
+    if (startMobileMoney && !paytotaConfigured()) {
+      return NextResponse.json(
+        { error: 'Mobile money is not available right now. Pay by card or try again later.' },
+        { status: 503, headers: corsHeaders() },
+      );
+    }
 
     const statusToken = randomUUID();
     const orderPayload: Record<string, unknown> = {
       ...order,
       status_token: statusToken,
       ...(startHosted ? { payment_method: 'dpo', payment_reference: null } : {}),
+      ...(startMobileMoney ? { payment_method: 'mobile_money', payment_reference: null } : {}),
     };
 
     const { row: inserted, error: insertError } = await pgInsertRow(
@@ -74,20 +90,48 @@ export async function POST(req: Request) {
     }
 
     let hostedCheckoutUrl: string | undefined;
+    let mobileMoneyCheckoutUrl: string | undefined;
+    let awaitingPhonePrompt = false;
+    const description = orderDescriptionFromRow(inserted as Record<string, unknown>);
     if (startHosted) {
       try {
         hostedCheckoutUrl = await attachHostedCheckoutToOrder(
           supabaseUrl,
           serviceRoleKey,
           inserted as Record<string, unknown>,
-          orderDescriptionFromRow(inserted as Record<string, unknown>),
+          description,
         );
       } catch (e) {
         console.error('[orders/create-service-order] hosted session failed', e);
         return NextResponse.json(
           {
             error:
-              e instanceof Error ? e.message : 'Could not start secure payment. Your order was saved; contact us or try again.',
+              e instanceof Error ? e.message : 'Could not start card payment. Your order was saved; contact us or try again.',
+            orderNumber,
+            statusToken,
+          },
+          { status: 502, headers: corsHeaders() },
+        );
+      }
+    }
+    if (startMobileMoney) {
+      try {
+        const mm = await attachPaytotaToOrder({
+          supabaseUrl,
+          serviceKey: serviceRoleKey,
+          order: inserted as Record<string, unknown>,
+          productName: description,
+        });
+        mobileMoneyCheckoutUrl = mm.checkoutUrl || undefined;
+        awaitingPhonePrompt = mm.stkSent;
+      } catch (e) {
+        console.error('[orders/create-service-order] paytota session failed', e);
+        return NextResponse.json(
+          {
+            error:
+              e instanceof Error
+                ? e.message
+                : 'Could not start mobile money. Your order was saved; contact us or try again.',
             orderNumber,
             statusToken,
           },
@@ -96,7 +140,10 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ orderNumber, statusToken, hostedCheckoutUrl }, { status: 200, headers: corsHeaders() });
+    return NextResponse.json(
+      { orderNumber, statusToken, hostedCheckoutUrl, mobileMoneyCheckoutUrl, awaitingPhonePrompt },
+      { status: 200, headers: corsHeaders() },
+    );
   } catch (e) {
     console.error('[orders/create-service-order] fatal', e);
     return NextResponse.json(

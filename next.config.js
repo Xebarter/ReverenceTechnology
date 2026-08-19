@@ -9,6 +9,19 @@ const nextConfig = {
     // Keep behavior predictable during migration.
     optimizePackageImports: [],
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: '/my-projects', destination: '/dashboard/projects', permanent: false },

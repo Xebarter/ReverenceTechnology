@@ -36,20 +36,25 @@ export default function Checkout({ onClose }: CheckoutProps) {
     notes: '',
   });
 
-  const isPaymentReferenceRequired =
-    formData.payment_method === 'mobile_money' || formData.payment_method === 'bank_transfer';
-
+  const isPaymentReferenceRequired = formData.payment_method === 'bank_transfer';
   const usesHostedCheckout = formData.payment_method === 'hosted_checkout';
+  const usesMobileMoney = formData.payment_method === 'mobile_money';
 
   const paymentVerification = (() => {
     if (formData.payment_method === 'hosted_checkout') {
       return {
-        title: 'Secure online checkout',
-        description:
-          'You will complete payment on a secure hosted page. Card and mobile wallet options depend on what your bank supports.',
+        title: 'Card payment',
+        description: 'You will complete payment on a secure card page. Mobile money is collected separately.',
       };
     }
-    if (formData.payment_method === 'mobile_money' || formData.payment_method === 'bank_transfer') {
+    if (formData.payment_method === 'mobile_money') {
+      return {
+        title: 'Mobile money',
+        description:
+          'We will send a PIN prompt to the phone number you enter. Approve it to complete payment (MTN or Airtel).',
+      };
+    }
+    if (formData.payment_method === 'bank_transfer') {
       return {
         title: 'Payment verification',
         description:
@@ -123,6 +128,12 @@ export default function Checkout({ onClose }: CheckoutProps) {
       return;
     }
 
+    if (usesMobileMoney && !formData.customer_phone.trim()) {
+      setError('Enter the mobile money number that will receive the payment prompt.');
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const statusToken =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -155,27 +166,46 @@ export default function Checkout({ onClose }: CheckoutProps) {
         notes: formData.notes || null,
       };
 
-      if (usesHostedCheckout) {
+      if (usesHostedCheckout || usesMobileMoney) {
         const resp = await fetch('/api/orders/create-shop-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order: orderData, startHostedCheckout: true }),
+          body: JSON.stringify({
+            order: orderData,
+            startHostedCheckout: usesHostedCheckout,
+            startMobileMoney: usesMobileMoney,
+          }),
         });
         const json = (await resp.json().catch(() => null)) as {
           orderNumber?: string;
+          statusToken?: string;
           hostedCheckoutUrl?: string;
+          mobileMoneyCheckoutUrl?: string;
+          awaitingPhonePrompt?: boolean;
           error?: string;
         } | null;
         if (!resp.ok) {
           throw new Error(json?.error || `Request failed (HTTP ${resp.status})`);
         }
-        const url = json?.hostedCheckoutUrl;
-        if (!url) {
-          throw new Error('Secure checkout could not be started. Please try again or pick another payment method.');
+        if (usesHostedCheckout) {
+          const url = json?.hostedCheckoutUrl;
+          if (!url) {
+            throw new Error('Card checkout could not be started. Please try again or pick mobile money.');
+          }
+          clearCart();
+          window.location.href = url;
+          return;
         }
         clearCart();
-        window.location.href = url;
-        return;
+        if (json?.awaitingPhonePrompt && json.orderNumber && json.statusToken) {
+          window.location.href = `/payment-result?order=${encodeURIComponent(json.orderNumber)}&t=${encodeURIComponent(json.statusToken)}&mm=1`;
+          return;
+        }
+        if (json?.mobileMoneyCheckoutUrl) {
+          window.location.href = json.mobileMoneyCheckoutUrl;
+          return;
+        }
+        throw new Error('Mobile money checkout could not be started. Please try again or pay by card.');
       }
 
       const { data, error: insertError } = await adminSupabase
@@ -331,6 +361,11 @@ export default function Checkout({ onClose }: CheckoutProps) {
                       required
                       placeholder="+256 700 000 000"
                     />
+                    {usesMobileMoney && (
+                      <p className="mt-1 text-xs text-muted">
+                        Use the MTN or Airtel number that should receive the payment prompt.
+                      </p>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -389,11 +424,11 @@ export default function Checkout({ onClose }: CheckoutProps) {
                 </h2>
                 <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
                   {[
-                    { value: 'hosted_checkout', label: 'Secure online', icon: ShieldCheck },
                     { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
+                    { value: 'hosted_checkout', label: 'Card', icon: CreditCard },
                     { value: 'bank_transfer', label: 'Bank Transfer', icon: Building2 },
                     { value: 'cash', label: 'Cash', icon: Wallet },
-                    { value: 'other', label: 'Other', icon: CreditCard },
+                    { value: 'other', label: 'Other', icon: ShieldCheck },
                   ].map((method) => {
                     const Icon = method.icon;
                     return (
@@ -413,7 +448,7 @@ export default function Checkout({ onClose }: CheckoutProps) {
                     );
                   })}
                 </div>
-                {!usesHostedCheckout && (
+                {!usesHostedCheckout && !usesMobileMoney && (
                   <div>
                     <FieldLabel htmlFor="payment_reference">
                       Payment Reference / Transaction ID{' '}
@@ -435,7 +470,7 @@ export default function Checkout({ onClose }: CheckoutProps) {
                     />
                     <p className="mt-1 text-xs text-muted">
                       {isPaymentReferenceRequired
-                        ? 'Required for Mobile Money and Bank Transfer.'
+                        ? 'Required for Bank Transfer.'
                         : 'You can leave this blank if paying with cash or other methods.'}
                     </p>
                   </div>
@@ -506,7 +541,11 @@ export default function Checkout({ onClose }: CheckoutProps) {
                 ) : (
                   <>
                     <CreditCard size={24} />
-                    {usesHostedCheckout ? 'Continue to secure payment' : 'Place Order'}
+                    {usesHostedCheckout
+                      ? 'Continue to card payment'
+                      : usesMobileMoney
+                        ? 'Pay with mobile money'
+                        : 'Place Order'}
                   </>
                 )}
               </Button>

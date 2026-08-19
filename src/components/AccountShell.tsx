@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Briefcase, FolderOpen, LayoutDashboard, Loader2, LogOut, Menu, Plus, X } from 'lucide-react';
 import { useUser } from '../UserContext';
+import { authPageHref } from '../lib/authRedirect';
 import { Button } from './ui';
 
 const nav = [
@@ -42,7 +43,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, loading, signOut } = useUser();
 
-  const redirectTo = `/auth?redirect=${encodeURIComponent(pathname || '/dashboard')}`;
+  const redirectTo = authPageHref(pathname);
 
   useEffect(() => {
     if (!loading && !user) router.replace(redirectTo);

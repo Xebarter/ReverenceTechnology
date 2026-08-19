@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { onIdTokenChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
-import { firebaseAuth } from './lib/firebase';
+import { consumeRedirectResult, firebaseAuth } from './lib/firebase';
 
 export type AppUser = {
   id: string;
@@ -63,22 +63,47 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const unsub = onIdTokenChanged(firebaseAuth, async (fb) => {
+    let cancelled = false;
+    let seq = 0;
+    let unsub: (() => void) | undefined;
+
+    const apply = async (fb: FirebaseUser | null) => {
+      const my = ++seq;
       if (fb) {
         setUser(toAppUser(fb));
         const token = await fb.getIdToken().catch(() => null);
+        if (cancelled || my !== seq) return;
         setSession({ accessToken: token });
         const result = await syncSession(fb);
+        if (cancelled || my !== seq) return;
         setIsAdmin(result.isAdmin);
       } else {
         setUser(null);
         setSession(null);
         setIsAdmin(false);
+        if (cancelled || my !== seq || firebaseAuth.currentUser) return;
         await syncSession(null);
+        if (cancelled || my !== seq || firebaseAuth.currentUser) return;
       }
-      setLoading(false);
-    });
-    return () => unsub();
+      if (!cancelled && my === seq) setLoading(false);
+    };
+
+    (async () => {
+      try {
+        await consumeRedirectResult();
+      } catch (e) {
+        console.error('[auth] getRedirectResult', e);
+      }
+      if (cancelled) return;
+      unsub = onIdTokenChanged(firebaseAuth, (fb) => {
+        void apply(fb);
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
   }, []);
 
   const signOut = useCallback(async () => {

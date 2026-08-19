@@ -27,6 +27,8 @@ export default function PaymentResult() {
   const intervalRef = useRef<number | undefined>(undefined);
   const [refreshNonce, setRefreshNonce] = useState(0);
 
+  const isMobileMoneyPrompt = searchParams?.get('mm') === '1';
+
   const isServiceOrder = useMemo(() => {
     const raw = (searchParams?.get('kind') || '').toLowerCase();
     return raw === 'service';
@@ -229,8 +231,9 @@ export default function PaymentResult() {
               </p>
             ) : paymentStatus === 'pending' ? (
               <p className="text-ink">
-                Your order is pending. We will update the status when payment is confirmed. This page checks
-                automatically.
+                {isMobileMoneyPrompt
+                  ? 'Approve the PIN prompt on your phone. This page updates when mobile money payment is confirmed.'
+                  : 'Your order is pending. We will update the status when payment is confirmed. This page checks automatically.'}
               </p>
             ) : (
               <p className="text-ink">We are loading your order status. Please wait a moment…</p>

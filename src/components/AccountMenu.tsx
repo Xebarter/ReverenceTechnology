@@ -16,6 +16,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useUser } from '../UserContext';
+import { authPageHref } from '../lib/authRedirect';
 
 function initialsFor(user: { displayName: string | null; email: string | null }) {
   const name = user.displayName?.trim();
@@ -42,7 +43,7 @@ export default function AccountMenu() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin } = useUser();
-  const authHref = `/auth?redirect=${encodeURIComponent(pathname || '/')}`;
+  const authHref = authPageHref(pathname);
 
   useEffect(() => {
     setOpen(false);

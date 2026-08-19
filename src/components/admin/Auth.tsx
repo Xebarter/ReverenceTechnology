@@ -1,34 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signInWithRedirect,
-} from 'firebase/auth';
-import { firebaseAuth, googleProvider } from '../../lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { firebaseAuth, signInWithGoogle } from '../../lib/firebase';
 import { useUser } from '../../UserContext';
 import { Button, Card, FieldLabel, Input } from '../ui';
-
-function prefersRedirectAuth() {
-  if (typeof window === 'undefined') return false;
-  return /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent || '');
-}
 
 export default function AdminAuth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { user, loading: authLoading, isAdmin } = useUser();
 
   useEffect(() => {
     if (authLoading) return;
-    if (user && isAdmin) router.replace('/admin');
-    if (user && !isAdmin) router.replace('/unauthorized');
-  }, [authLoading, user, isAdmin, router]);
+    if (user && isAdmin) {
+      window.location.replace('/admin');
+      return;
+    }
+    if (user && !isAdmin) {
+      window.location.replace('/unauthorized');
+    }
+  }, [authLoading, user, isAdmin]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +40,8 @@ export default function AdminAuth() {
     setLoading(true);
     setError('');
     try {
-      if (prefersRedirectAuth()) {
-        await signInWithRedirect(firebaseAuth, googleProvider);
-        return;
-      }
-      await signInWithPopup(firebaseAuth, googleProvider);
+      sessionStorage.setItem('auth_redirect', '/admin');
+      await signInWithGoogle();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed');
       setLoading(false);
