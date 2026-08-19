@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '../UserContext';
 import { Button, buttonClassName, Container } from './ui';
+import AccountMenu from './AccountMenu';
 
 const navLinkClass =
   'relative text-sm tracking-wide text-ink hover:text-ink-deep transition-colors after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-gold after:transition-all hover:after:w-full';
@@ -14,7 +14,6 @@ const navLinkClass =
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, loading, signOut } = useUser();
 
   useEffect(() => {
     const scrollToSection = () => {
@@ -110,42 +109,23 @@ export default function Header() {
                 Portfolio
               </button>
 
-              {!loading && user ? (
-                <>
-                  <Link href="/dashboard" className={navLinkClass}>
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      await signOut();
-                      window.location.href = '/';
-                    }}
-                    className={navLinkClass}
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href={`/auth?redirect=${encodeURIComponent(pathname || '/')}`}
-                  className={navLinkClass}
-                >
-                  Sign in
-                </Link>
-              )}
+              <AccountMenu />
 
               <Button size="sm" onClick={() => navigateToSection('contact')}>
                 Get Started
               </Button>
             </div>
 
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="rounded-md p-2 text-ink lg:hidden"
-              aria-label="Open menu"
-            >
-              <Menu size={22} />
-            </button>
+            <div className="flex items-center gap-1.5 lg:hidden">
+              <AccountMenu />
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="rounded-md p-2 text-ink"
+                aria-label="Open menu"
+              >
+                <Menu size={22} />
+              </button>
+            </div>
           </nav>
         </Container>
       </header>
@@ -210,39 +190,6 @@ export default function Header() {
                   Portfolio
                   <ChevronRight size={16} className="text-gold" />
                 </button>
-
-                {!loading && user ? (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex w-full items-center justify-between border-b border-rule py-3.5 font-serif text-lg text-ink-deep"
-                    >
-                      Dashboard
-                      <ChevronRight size={16} className="text-gold" />
-                    </Link>
-                    <button
-                      onClick={async () => {
-                        await signOut();
-                        setIsMenuOpen(false);
-                        window.location.href = '/';
-                      }}
-                      className="flex w-full items-center justify-between border-b border-rule py-3.5 text-left font-serif text-lg text-ink-deep"
-                    >
-                      Sign out
-                      <ChevronRight size={16} className="text-gold" />
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    href={`/auth?redirect=${encodeURIComponent(pathname || '/')}`}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex w-full items-center justify-between border-b border-rule py-3.5 font-serif text-lg text-ink-deep"
-                  >
-                    Sign in
-                    <ChevronRight size={16} className="text-gold" />
-                  </Link>
-                )}
               </div>
 
               <div className="mt-auto space-y-4 border-t border-rule bg-paper-2 px-6 py-8">

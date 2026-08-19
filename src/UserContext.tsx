@@ -9,6 +9,7 @@ export type AppUser = {
   uid: string;
   email: string | null;
   displayName: string | null;
+  photoURL: string | null;
   user_metadata: { full_name?: string };
 };
 
@@ -30,6 +31,7 @@ function toAppUser(fb: FirebaseUser): AppUser {
     uid: fb.uid,
     email: fb.email,
     displayName,
+    photoURL: fb.photoURL,
     user_metadata: { full_name: displayName || undefined },
   };
 }
