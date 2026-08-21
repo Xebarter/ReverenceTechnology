@@ -1,13 +1,12 @@
-"use client";
-
 import Shop from '../../../components/Shop';
-import SEO from '../../../components/SEO';
+import { pageMetadata } from '../../../lib/seo';
+
+export const metadata = pageMetadata({
+  title: 'Shop',
+  description: 'Hardware and accessories from Reverence Technology in Kampala.',
+  path: '/shop',
+});
 
 export default function ShopPage() {
-  return (
-    <>
-      <SEO title="Shop" />
-      <Shop />
-    </>
-  );
+  return <Shop />;
 }

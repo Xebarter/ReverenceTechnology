@@ -1,30 +1,12 @@
-"use client";
+import HomePage from '../../components/HomePage';
+import JsonLd from '../../components/JsonLd';
+import { breadcrumbJsonLd } from '../../lib/seo';
 
-import { useState } from 'react';
-import Hero from '../../components/Hero';
-import About from '../../components/About';
-import Services from '../../components/Services';
-import Testimonials from '../../components/Testimonials';
-import SubmitTestimonial from '../../components/SubmitTestimonial';
-import Contact from '../../components/Contact';
-import FAQ from '../../components/FAQ';
-import Projects from '../../components/Projects';
-import SEO from '../../components/SEO';
-
-export default function HomePage() {
-  const [isTestimonialFormOpen, setIsTestimonialFormOpen] = useState(false);
-
+export default function Page() {
   return (
     <>
-      <SEO />
-      <Hero />
-      <Projects />
-      <About />
-      <Services />
-      <Testimonials onShowTestimonialForm={() => setIsTestimonialFormOpen(true)} />
-      <SubmitTestimonial isOpen={isTestimonialFormOpen} onClose={() => setIsTestimonialFormOpen(false)} />
-      <Contact />
-      <FAQ />
+      <JsonLd data={breadcrumbJsonLd([{ name: 'Home', path: '/' }])} />
+      <HomePage />
     </>
   );
 }

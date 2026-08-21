@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, User, ArrowRight, BookOpen, Search, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
-import SEO from './SEO';
 import { supabase } from '../lib/supabase';
 import { Badge, Card, Container, PageHeader } from './ui';
 
@@ -61,8 +60,6 @@ export default function Blog() {
 
   return (
     <div className="bg-paper pb-24">
-      <SEO title="Insights & News | Reverence Technology" />
-
       <PageHeader
         eyebrow="The Reverence Blog"
         title="Insights for the digital frontier"

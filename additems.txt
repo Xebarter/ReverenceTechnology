@@ -1,2757 +1,2305 @@
-# Introduction
-
-## Welcome
-
-As a merchant you are required to submit all required KYC and business registration information in order for your account to be approved and be able to query our API with the provided **brand id** and **secret key**.
-
-Under the Profile section in your account, please provide all the KYC needed.
-
-{% hint style="success" %}
-<https://gate.paytota.com/login>
-{% endhint %}
-
-<figure><img src="https://313608655-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F4krm6NiwB1qLQi5bHr4s%2Fuploads%2FGcZ5HuJEaFkB8hVbOi1o%2Fpaytota_doc_profile.png?alt=media&#x26;token=f3848ae4-1dc5-46f9-944c-5fafff73526b" alt=""><figcaption></figcaption></figure>
-
-# Authorization
-
-{% hint style="info" %}
-Your API requests are authenticated using API keys. Any request that doesn't include an API key will return an error.
-{% endhint %}
-
-## Get your API keys
-
-Retrieve the API Keys from the Developers section within your account. Utilize this key as a bearer token in the Authorization header included with each request: **`Authorization: Bearer {{secretkey}}`**
-
-<figure><img src="https://313608655-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F4krm6NiwB1qLQi5bHr4s%2Fuploads%2Fp05bJnlSbJfAjO0fwWMz%2Fpaytota_doc_developer.png?alt=media&#x26;token=2b3b38c6-0ab4-4493-b0fb-e62b3f66cd92" alt=""><figcaption></figcaption></figure>
-
-## Base Url
-
-{% hint style="success" %}
-[https://gate.paytota.com/](https://gate.paytota.com/login)
-{% endhint %}
-
-# Webhooks
-
-Define webhook rules to your server. The callback URL will receive a POST request with the related object's (e.g. Purchase for purchase.\* webhooks) data in body when any of the events is configured to listen for are triggered. The payload object will additionally include an **"event\_type"** field to indicate which event type triggered the webhook and **"status"** to indicate failure or success of the transaction.
-
-The webhooks can be defined in the developer section of the client account.
-
-Note that, as well as with the rest of dataset, test and live Webhooks are separate; test webhooks will not handle events caused by live Purchases, and vice-versa.
-
-<figure><img src="https://313608655-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F4krm6NiwB1qLQi5bHr4s%2Fuploads%2FaaMfB0qU3OT8DCKTOhQz%2Fpaytota_doc_webhook.png?alt=media&#x26;token=671aa854-12de-40b1-84bf-ad0c9ef0a294" alt=""><figcaption></figcaption></figure>
-
-## Webhook Authorization
-
-Payloads are signed using asymmetric A.K.A. public-key cryptography to guarantee the authenticity of delivered callbacks. Each callback delivery request includes an **X-Signature** header field. This field contains a base64-encoded RSA PKCS#1 v1.5 signature of the SHA256 digest of the request body buffer.
-
-You can obtain the public key for Webhook authentication from Webhook.public\_key of the corresponding Webhook.
-
-You can obtain the public key for success callback authentication from **GET {base\_url}/api/v1/public\_key/**
-
-Please note the provider is not responsible for any financial losses incurred due to not implementing payload signature verification.
-
-See below sample
-
-{% tabs %}
-{% tab title="PHP" %}
-
-```php
-<?php
-$data = "Hello World";
-
-$signature = 'ktRxi//UUzVK8Pi5ICRSs5nCaK2g5Op+BM2mq4BK6zrb+A2392fiuFBoNj4yBWLfJxzzl1IwgVgQbjjrnbJ3i4kpYTZQ1nG82zpD7SAiF6qWq06YHR5Hrp0uvkiCKHt6pDYkXsCIph8VQqp61uplv3gifTtMRR1BGXwcxfWdrTheiFGWPnlijFaoMgLOG5CVfQAif9E7zx2ybDYtu2mMnxUWAld5bxNZXMKG87NGQ42tLaUE5OYv5yJz0kZZPZFZ5d0neGLAdm+Njf5zWlOw==';
-
-$publicKey = '-----BEGIN CERTIFICATE-----
-MIIFMDCCBBigAwIBAgISA8MYezqjKnHZa+83lO64HqQoMA0GCSqGSIb3DQEBCwUA
-MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
-EwJSMzAeFw0yMzA2MTYxNjE0MjdaFw0yMzA5MTQxNjE0MjZaMB4xHDAaBgNVBAMT
-E3BheW1lbnRzLmFmcml2ci5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
-AoIBAQDCFjhZsB7yR669TQ7mxWo9w7ajiT8Z3VZUrWSm0SKmsoxgQ1oDb1yDWIDU
-fNCGQvaoRcxBfB+g9D3rhiGtX5oi8FhSFSEuNFXRN3kTVm8vRmfFdY45sjBdtF0j
-8RjGwskqSzCzciXfSLoeKoLubUMcCTmUC9FLkwDqkQHedswcYG5AalvBqT7eqtBe
-zip1+tVdZSVq79m5EJw98ccLF42cinkoqK76Mg2uss0mNuvpSxFN7gn/0XhaLl5U
-5F2kwQr3qsijWLHqOm2cHyGOeiVScbJexvhnVMlJMEblHU/x/K6gZTCj4+O7KDgg
-Gh3LHmZJ9sAtRudvM/16jGxIGoknAgMBAAGjggJSMIICTjAOBgNVHQ8BAf8EBAMC
-BaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAw
-HQYDVR0OBBYEFMJallKq+V5W8oqJPkmioUIvRMKGMB8GA1UdIwQYMBaAFBQusxe3
-WFbLrlAJQOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAhBggrBgEFBQcwAYYVaHR0
-cDovL3IzLm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5sZW5j
-ci5vcmcvMFsGA1UdEQRUMFKCE3BheW1lbnRzLmFmcml2ci5jb22CDnNydi5hZnJp
-dnIuY29tghd3d3cucGF5bWVudHMuYWZyaXZyLmNvbYISd3d3LnNydi5hZnJpdnIu
-Y29tMBMGA1UdIAQMMAowCAYGZ4EMAQIBMIIBBAYKKwYBBAHWeQIEAgSB9QSB8gDw
-AHYAtz77JN+cTbp18jnFulj0bF38Qs96nzXEnh0JgSXttJkAAAGIxTOECAAABAMA
-RzBFAiBSb7ssu+4XK1NRsXnV4eeI7mHcnJm57p9enU/2N019QgIhAJLMIyZeb/Mf
-P9NKPCbpeHp5ld48TS91Jm1Z4cPDjuyFAHYA6D7Q2j71BjUy51covIlryQPTy9ER
-a+zraeF3fW0GvW4AAAGIxTOEBAAABAMARzBFAiAYr5lgHDg7JfQrMA4t9Z7GybWD
-DfhS7/SJyklAwWNULAIhAPMBI4FKxrN91iIKiQN3OfD0ibiQGlQgHz9s5w6YInTa
-MA0GCSqGSIb3DQEBCwUAA4IBAQCe1q3OaK9kakvORWXshHMw7aegML0YG7e/M8Ma
-2KBkOAl9X0+Jy0c7Hn26fN6ZudWeOHE4PngY1tTKGoUm2PKVesYt7sP8Ivo+/NTo
-B1+C/q1Mdwv/vcewmw2n6/flTnvvmw6s9zXpRVJJ2sD2jAwIByMNWN8naegz2f1g
-3HEPOtKVosX0zYXpFflPkGTRui0FgpiCQq0/3MaFXAu3/aSbh6Fczb1/JaAswarK
-LhlGP5mNHorLbFea+B7lmIeUf9gosUrZ3cjfBVKknWrBg//DzTpf+YS1nte+Kk6S
-FoLSAh7OePSmFM0okO6iyDLxmGFAja2D+CZCQbR5Y+TVi7T1
------END CERTIFICATE-----';
-
-$ok = openssl_verify(
-    $data,
-    base64_decode($signature),
-    $publicKey,
-    'sha256WithRSAEncryption'
-);
-
-if ($ok == 1) {
-    echo "good";
-} elseif ($ok == 0) {
-    echo "bad";
-} else {
-    echo "error checking signature";
-}
-?>
-```
-
-{% endtab %}
-
-{% tab title="JS" %}
-
-```javascript
-const crypto = require('crypto');
-
-const data = "Hello World";
-
-const signature = 'ktRxi//UUzVK8Pi5ICRSs5nCaK2g5Op+BM2mq4BK6zrb+A2392fiuFBoNj4yBWLfJxzzl1IwgVgQbjjrnbJ3i4kpYTZQ1nG82zpD7SAiF6qWq06YHR5Hrp0uvkiCKHt6pDYkXsCIph8VQqp61uplv3gifTtMRR1BGXwcxfWdrTheiFGWPnlijFaoMgLOG5CVfQAif9E7zx2ybDYtu2mMnxUWAld5bxNZXMKG87NGQ42tLaUE5OYv5yJz0kZZPZFZ5d0neGLAdm+Njf5zWlOw==';
-
-const publicKeyPem = `-----BEGIN CERTIFICATE-----
-MIIFMDCCBBigAwIBAgISA8MYezqjKnHZa+83lO64HqQoMA0GCSqGSIb3DQEBCwUA
-MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
-EwJSMzAeFw0yMzA2MTYxNjE0MjdaFw0yMzA5MTQxNjE0MjZaMB4xHDAaBgNVBAMT
-E3BheW1lbnRzLmFmcml2ci5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
-AoIBAQDCFjhZsB7yR669TQ7mxWo9w7ajiT8Z3VZUrWSm0SKmsoxgQ1oDb1yDWIDU
-fNCGQvaoRcxBfB+g9D3rhiGtX5oi8FhSFSEuNFXRN3kTVm8vRmfFdY45sjBdtF0j
-8RjGwskqSzCzciXfSLoeKoLubUMcCTmUC9FLkwDqkQHedswcYG5AalvBqT7eqtBe
-zip1+tVdZSVq79m5EJw98ccLF42cinkoqK76Mg2uss0mNuvpSxFN7gn/0XhaLl5U
-5F2kwQr3qsijWLHqOm2cHyGOeiVScbJexvhnVMlJMEblHU/x/K6gZTCj4+O7KDgg
-Gh3LHmZJ9sAtRudvM/16jGxIGoknAgMBAAGjggJSMIICTjAOBgNVHQ8BAf8EBAMC
-BaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAw
-HQYDVR0OBBYEFMJallKq+V5W8oqJPkmioUIvRMKGMB8GA1UdIwQYMBaAFBQusxe3
-WFbLrlAJQOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAhBggrBgEFBQcwAYYVaHR0
-cDovL3IzLm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5sZW5j
-ci5vcmcvMFsGA1UdEQRUMFKCE3BheW1lbnRzLmFmcml2ci5jb22CDnNydi5hZnJp
-dnIuY29tghd3d3cucGF5bWVudHMuYWZyaXZyLmNvbYISd3d3LnNydi5hZnJpdnIu
-Y29tMBMGA1UdIAQMMAowCAYGZ4EMAQIBMIIBBAYKKwYBBAHWeQIEAgSB9QSB8gDw
-AHYAtz77JN+cTbp18jnFulj0bF38Qs96nzXEnh0JgSXttJkAAAGIxTOECAAABAMA
-RzBFAiBSb7ssu+4XK1NRsXnV4eeI7mHcnJm57p9enU/2N019QgIhAJLMIyZeb/Mf
-P9NKPCbpeHp5ld48TS91Jm1Z4cPDjuyFAHYA6D7Q2j71BjUy51covIlryQPTy9ER
-a+zraeF3fW0GvW4AAAGIxTOEBAAABAMARzBFAiAYr5lgHDg7JfQrMA4t9Z7GybWD
-DfhS7/SJyklAwWNULAIhAPMBI4FKxrN91iIKiQN3OfD0ibiQGlQgHz9s5w6YInTa
-MA0GCSqGSIb3DQEBCwUAA4IBAQCe1q3OaK9kakvORWXshHMw7aegML0YG7e/M8Ma
-2KBkOAl9X0+Jy0c7Hn26fN6ZudWeOHE4PngY1tTKGoUm2PKVesYt7sP8Ivo+/NTo
-B1+C/q1Mdwv/vcewmw2n6/flTnvvmw6s9zXpRVJJ2sD2jAwIByMNWN8naegz2f1g
-3HEPOtKVosX0zYXpFflPkGTRui0FgpiCQq0/3MaFXAu3/aSbh6Fczb1/JaAswarK
-LhlGP5mNHorLbFea+B7lmIeUf9gosUrZ3cjfBVKknWrBg//DzTpf+YS1nte+Kk6S
-FoLSAh7OePSmFM0okO6iyDLxmGFAja2D+CZCQbR5Y+TVi7T1
------END CERTIFICATE-----`;
-
-function verifySignature(publicKeyPem, data, signature) {
-  const publicKey = crypto.createPublicKey(publicKeyPem);
-  const verifier = crypto.createVerify('SHA256');
-  verifier.update(data);
-  const isVerified = verifier.verify(publicKey, Buffer.from(signature, 'base64'));
-
-  return isVerified;
-}
-
-const result = verifySignature(publicKeyPem, data, signature);
-
-if (result) {
-  console.log("good");
-} else {
-  console.log("bad");
-}
-```
-
-{% endtab %}
-{% endtabs %}
-
-# Account Balance
-
-## This API method is used to retrieve Account balance
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/account/json/balance/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Authorization<mark style="color:red;">\*</mark> |        | Bearer **`{{secret key}}`** |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-
-{% tabs %}
-{% tab title="201: Created " %}
-
-{% endtab %}
-{% endtabs %}
-
-{% tabs %}
-{% tab title="Response" %}
-
-```json5
-{
-  "UGX": {
-    "balance": 2710,
-    "fee_sell": 2590,
-    "reserved": 0,
-    "gross_balance": 5300,
-    "payout_balance": 1000,
-    "payout_fee_sell": 0,
-    "pending_payouts": 0,
-    "payout_overdraft": 0,
-    "pending_outgoing": 1500,
-    "available_balance": 1210,
-    "payout_gross_balance": 1000,
-    "available_payout_balance": 1000
-  }
-}
-```
-
-{% endtab %}
-
-{% tab title="Description" %}
-
-| description:       | Company Balance in a specific currency                                                              |
-| ------------------ | --------------------------------------------------------------------------------------------------- |
-| gross\_balance     | <p></p><p>Raw Company balance without any fees or reserved amounts subtracted</p>                   |
-| balance            | <p></p><p>Company gross balance with transaction fees subtracted</p>                                |
-| available\_balance | <p></p><p>Company balance currently available for withdrawal</p>                                    |
-| reserved           | <p></p><p>Amount protected from withdrawal for an amount of time as per the brand configuration</p> |
-| pending\_outgoing  | <p></p><p>Amount currently pending withdrawal</p>                                                   |
-| fee\_sell          | <p>FeeSellinteger</p><p>Fees applied to transactions</p>                                            |
-| {% endtab %}       |                                                                                                     |
-| {% endtabs %}      |                                                                                                     |
-
-# Mobile Money V2
-
-Mobile Money Payment are available in the following countries.
-
-#### Uganda
-
-Airtel (Collections and Payouts)\
-MTN (Collections and Payouts)
-
-#### Kenya
-
-Mpesa (Collections and Payouts)
-
-Airtel (Collections and Payouts)
-
-#### Ethiopia
-
-Telebirr/Ethio Telecom (Collections and Payouts)
-
-Mpesa/Safaricom Ethiopia (Collections and Payouts)
-
-**Test phone numbers for success response. Any other phone number will return an error notification**\
-\
-phone = 256770123456\
-country = UG\
-currency = UGX\
-\
-phone = 254790123456\
-country = KE\
-currency = KES
-
-phone = 251910015422\
-country = ET\
-currency = ETB
-
-# Collection/Purchase
-
-### Step 1 - Initiate
-
-## This API method is utilized to trigger a collection/purchase request, resulting in a JSON response being returned to you.
-
-<mark style="color:green;">`POST`</mark> `{base url}/api/v1/purchases/`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json5
-{
-    "client": {
-        "email": "example@gmail.com",
-        "phone": "256770123456",
-        "country": "UG",
-        // "full_name": "Jane Rose",
-        // "personal_code": "10231",
-        // "tax_number": "70002307552",
-        // "city": "Kampala",
-        // "street_address": "Ntinda",
-        // "zip_code": "124538",
-        // "state": "Nakawa"
-    },
-    "purchase": {
-        "currency": "UGX",
-        "products": [
-            {
-                "name": "Example One",
-                "price": "500"
-            }
-        ]
-    },
-    "reference": "Your unique transaction reference",
-    "skip_capture": false,
-    "brand_id": "{{BrandId}}"
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-{
-  "id": "05b0b12b-1702-4719-8e53-e3a2ee2d5e20",
-  "due": 1747390681,
-  "type": "purchase",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "Kampala",
-    "email": "example@gmail.com",
-    "phone": "256770123456",
-    "state": "Nakawa",
-    "country": "UG",
-    "zip_code": "124538",
-    "bank_code": "",
-    "full_name": "Jane Rose",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "70002307552",
-    "client_type": null,
-    "bank_account": "",
-    "personal_code": "10231",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "Ntinda",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "issued": "2025-05-16",
-  "status": "created",
-  "is_test": false,
-  "payment": null,
-  "product": "purchases",
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "order_id": null,
-  "platform": "api",
-  "purchase": {
-    "debt": 0,
-    "notes": "",
-    "total": 1000,
-    "currency": "UGX",
-    "language": "en",
-    "products": [
-      {
-        "name": "Test Purchase",
-        "price": 1000,
-        "category": "",
-        "discount": 0,
-        "quantity": "1.0000",
-        "tax_percent": "0.00",
-        "total_price_override": null
-      }
-    ],
-    "timezone": "UTC",
-    "due_strict": false,
-    "email_message": "",
-    "total_override": null,
-    "shipping_options": [],
-    "subtotal_override": null,
-    "total_tax_override": null,
-    "has_upsell_products": false,
-    "payment_method_details": {},
-    "request_client_details": [],
-    "total_discount_override": null
-  },
-  "client_id": "dfb1fb80-0322-4daa-900f-b0a39cda0452",
-  "reference": "e44fe395-ddf4-4c0f-8386-c53dd8252985",
-  "viewed_on": null,
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747387081,
-  "event_type": "purchase.created",
-  "updated_on": 1747387081,
-  "invoice_url": null,
-  "can_retrieve": false,
-  "checkout_url": "https://payments.paytota.com/p/05b0b12b-1702-4719-8e53-e3a2ee2d5e20/",
-  "send_receipt": false,
-  "skip_capture": false,
-  "creator_agent": "",
-  "referral_code": null,
-  "can_chargeback": false,
-  "issuer_details": {
-    "website": "",
-    "brand_name": "TOTAL PAYMENTS",
-    "legal_city": "Kamplaa",
-    "legal_name": "PAYTOTA",
-    "tax_number": "",
-    "bank_accounts": [
-      {
-        "bank_code": "EQBLUGKAXXX",
-        "bank_account": "1036200000000"
-      }
-    ],
-    "legal_country": "UG",
-    "legal_zip_code": "23235",
-    "registration_number": "80000000000000",
-    "legal_street_address": "Venture Labs, Plot 23 Binayomba Road, Bugolobi"
-  },
-  "marked_as_paid": false,
-  "status_history": [
-    {
-      "status": "created",
-      "timestamp": 1747387081
-    }
-  ],
-  "cancel_redirect": "",
-  "created_from_ip": "54.86.50.139",
-  "direct_post_url": null,
-  "force_recurring": false,
-  "recurring_token": null,
-  "failure_redirect": "",
-  "success_callback": "",
-  "success_redirect": "",
-  "transaction_data": {
-    "flow": "payform",
-    "extra": {},
-    "country": "",
-    "attempts": [],
-    "payment_method": ""
-  },
-  "upsell_campaigns": [],
-  "refundable_amount": 0,
-  "is_recurring_token": false,
-  "billing_template_id": null,
-  "currency_conversion": null,
-  "reference_generated": "PT1418",
-  "refund_availability": "none",
-  "referral_campaign_id": null,
-  "retain_level_details": null,
-  "referral_code_details": null,
-  "referral_code_generated": null,
-  "payment_method_whitelist": null
-}
-```
-
-{% endtab %}
-
-{% tab title="Headers" %}
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer **`{{secret key}}`** |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-
-{% endtab %}
-
-{% tab title="Response Status " %}
-201: Created
-{% endtab %}
-{% endtabs %}
-
-{% hint style="success" %}
-The transaction ID in JSON response is then used to execute request(Step 2) to initiate a STK Push prompt on the Subscriber's mobile handset to be debited.
-{% endhint %}
-
-### Step 2 - Execute
-
-### You have two methods to execute the transaction&#x20;
-
-* Redirect the customer to the **{{checkout\_url}}** provided in the response from **step 1** on the Paytota platform.\
-  \
-  Take note the following parameters should be added to your Initial JSON body on using this method  **`success_redirect`**, **`failure_redirect`**\
-  After the payment is processed, the system will redirect the customer back to your website.
-* Alternatively, you can initiate a STK Push prompt on the subscriber handset by sending a **form-data** request through your backend system. **Following a successful execution, you will receive asynchronous status update via webhook. The notification will have the status 'pending\_execute'.**
-
-## Using the transaction ID received in Step 1, this method is then queried by sending a form-data request to initiate a PIN prompt on the subscriber handset.&#x20;
-
-<mark style="color:green;">`POST`</mark> `{base url}/p/{id}/`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-| Name                                  | Type   | Value          |
-| ------------------------------------- | ------ | -------------- |
-| s2s<mark style="color:red;">\*</mark> | String | true           |
-| pm<mark style="color:red;">\*</mark>  | String | paytota\_proxy |
-| {% endtab %}                          |        |                |
-
-{% tab title="Response" %}
-
-```json5
-{
-    "status": "pending",
-    "details": {
-        "return_code": "200",
-        "message": "Transaction received for processing",
-        "transaction": {
-            "status": "pending",
-            "internal_reference": "97AE66FC9CD7A040EA17AC7911C82EAD"
-        }
-    }
-}
-```
-
-{% endtab %}
-
-{% tab title="Request Headers" %}
-
-#### Headers
-
-| Name                                           | Type   | Description         |
-| ---------------------------------------------- | ------ | ------------------- |
-| Content-Type<mark style="color:red;">\*</mark> | String | multipart/form-data |
-
-#### Request Body
-
-{% endtab %}
-
-{% tab title="Response Status " %}
-200: OK
-{% endtab %}
-{% endtabs %}
-
-{% hint style="success" %}
-You will receive a callback on your webhook URL regarding the status of the transaction
-
-```
-Successful transaction  (status = paid)
-Failed transaction (status = error)
-```
-
-{% endhint %}
-
-<details>
-
-<summary>Callback Example</summary>
-
-```json5
-{
-  "id": "05b0b12b-1702-4719-8e53-e3a2ee2d5e20",
-  "due": 1747390681,
-  "type": "purchase",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "Kampala",
-    "email": "example@gmail.com",
-    "phone": "256770123456",
-    "state": "Nakawa",
-    "country": "UG",
-    "zip_code": "124538",
-    "bank_code": "",
-    "full_name": "Jane Rose",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "70002307552",
-    "client_type": null,
-    "bank_account": "",
-    "personal_code": "10231",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "Ntinda",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "issued": "2025-05-16",
-  "status": "paid",
-  "is_test": false,
-  "payment": {
-    "amount": 1000,
-    "paid_on": 1747387124,
-    "currency": "UGX",
-    "fee_amount": 0,
-    "net_amount": 1000,
-    "description": "",
-    "is_outgoing": false,
-    "payment_type": "purchase",
-    "pending_amount": 0,
-    "remote_paid_on": 1747387124,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "product": "purchases",
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "order_id": null,
-  "platform": "api",
-  "purchase": {
-    "debt": 0,
-    "notes": "",
-    "total": 1000,
-    "currency": "UGX",
-    "language": "en",
-    "products": [
-      {
-        "name": "Test Purchase",
-        "price": 1000,
-        "category": "",
-        "discount": 0,
-        "quantity": "1.0000",
-        "tax_percent": "0.00",
-        "total_price_override": null
-      }
-    ],
-    "timezone": "UTC",
-    "due_strict": false,
-    "email_message": "",
-    "total_override": null,
-    "shipping_options": [],
-    "subtotal_override": null,
-    "total_tax_override": null,
-    "has_upsell_products": false,
-    "payment_method_details": {},
-    "request_client_details": [],
-    "total_discount_override": null
-  },
-  "client_id": "dfb1fb80-0322-4daa-900f-b0a39cda0452",
-  "reference": "e44fe395-ddf4-4c0f-8386-c53dd8252985",
-  "viewed_on": 1747387118,
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747387081,
-  "event_type": "purchase.paid",
-  "updated_on": 1747387123,
-  "invoice_url": null,
-  "can_retrieve": false,
-  "checkout_url": "https://gate.paytota.com/p/05b0b12b-1702-4719-8e53-e3a2ee2d5e20/invoice/",
-  "send_receipt": false,
-  "skip_capture": false,
-  "creator_agent": "",
-  "referral_code": null,
-  "can_chargeback": false,
-  "issuer_details": {
-    "website": "",
-    "brand_name": "TOTAL PAYMENTS",
-    "legal_city": "Kamplaa",
-    "legal_name": "PAYTOTA",
-    "tax_number": "",
-    "bank_accounts": [
-      {
-        "bank_code": "EQBLUGKAXXX",
-        "bank_account": "1036200000000"
-      }
-    ],
-    "legal_country": "UG",
-    "legal_zip_code": "23235",
-    "registration_number": "80000000000000",
-    "legal_street_address": "Venture Labs, Plot 23 Binayomba Road, Bugolobi"
-  },
-  "marked_as_paid": false,
-  "status_history": [
-    {
-      "status": "created",
-      "timestamp": 1747387081
-    },
-    {
-      "status": "viewed",
-      "timestamp": 1747387118
-    },
-    {
-      "status": "pending_execute",
-      "timestamp": 1747387118
-    },
-    {
-      "status": "paid",
-      "timestamp": 1747387124
-    }
-  ],
-  "cancel_redirect": "",
-  "created_from_ip": "54.86.50.139",
-  "direct_post_url": null,
-  "force_recurring": false,
-  "recurring_token": null,
-  "failure_redirect": "",
-  "success_callback": "",
-  "success_redirect": "",
-  "transaction_data": {
-    "flow": "payform",
-    "extra": {
-      "payload": {
-        "bank": {
-          "bank_code": "",
-          "bank_name": "",
-          "account_name": "",
-          "account_number": ""
-        },
-        "client": {
-          "city": "Kampala",
-          "email": "example@gmail.com",
-          "state": "Nakawa",
-          "country": "UG",
-          "zip_code": "124538",
-          "full_name": "",
-          "tax_number": "",
-          "personal_code": "",
-          "street_address": "Ntinda"
-        },
-        "message": "Transaction check successful",
-        "return_code": "200",
-        "transaction": {
-          "amount": 1000,
-          "mobile": "256770123456",
-          "status": "successful",
-          "country": "UG",
-          "currency": "UGX",
-          "operator": "SANDBOX",
-          "description": "",
-          "destination": "mobile",
-          "transaction_type": "purchase",
-          "external_reference": "05b0b12b-1702-4719-8e53-e3a2ee2d5e20:102479",
-          "internal_reference": "97AE66FC9CD7A040EA17AC7911C82EAD",
-          "operator_reference": "ea8c7ece-768d-43ed-893a-921613121936"
-        }
-      }
-    },
-    "country": "",
-    "attempts": [
-      {
-        "flow": "payform",
-        "type": "execute",
-        "error": null,
-        "extra": {
-          "payload": {
-            "bank": {
-              "bank_code": "",
-              "bank_name": "",
-              "account_name": "",
-              "account_number": ""
-            },
-            "client": {
-              "city": "Kampala",
-              "email": "example@gmail.com",
-              "state": "Nakawa",
-              "country": "UG",
-              "zip_code": "124538",
-              "full_name": "",
-              "tax_number": "",
-              "personal_code": "",
-              "street_address": "Ntinda"
-            },
-            "message": "Transaction check successful",
-            "return_code": "200",
-            "transaction": {
-              "amount": 1000,
-              "mobile": "256770123456",
-              "status": "successful",
-              "country": "UG",
-              "currency": "UGX",
-              "operator": "SANDBOX",
-              "description": "",
-              "destination": "mobile",
-              "transaction_type": "purchase",
-              "external_reference": "05b0b12b-1702-4719-8e53-e3a2ee2d5e20:102479",
-              "internal_reference": "97AE66FC9CD7A040EA17AC7911C82EAD",
-              "operator_reference": "ea8c7ece-768d-43ed-893a-921613121936"
-            }
-          }
-        },
-        "country": "",
-        "client_ip": "",
-        "fee_amount": 0,
-        "successful": true,
-        "payment_method": "paytota_proxy",
-        "processing_time": 1747387124
-      }
-    ],
-    "payment_method": "paytota_proxy"
-  },
-  "upsell_campaigns": [],
-  "refundable_amount": 1000,
-  "is_recurring_token": false,
-  "billing_template_id": null,
-  "currency_conversion": null,
-  "reference_generated": "PT1418",
-  "refund_availability": "none",
-  "referral_campaign_id": null,
-  "retain_level_details": null,
-  "referral_code_details": null,
-  "referral_code_generated": null,
-  "payment_method_whitelist": null
-}
-```
-
-</details>
-
-### Check Collection/Purchase Status
-
-## This method is used to query the collections/purchases transaction status using the transaction ID. Please note that this API also requires authorization using the Secret Key.
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/purchases/{id}/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="200: OK " %}
-
-{% endtab %}
-{% endtabs %}
-
-# Disbursement/Payout
-
-### Step 1 - Initiate
-
-## This API method is used to initiate an a disbursement/payout request for which you will receive a JSON response.
-
-<mark style="color:green;">`POST`</mark> `{base url}/api/v1/payouts/`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-<pre class="language-json5"><code class="lang-json5"><strong>{
-</strong>    "client": {
-        "email": "example@gmail.com",
-        "phone": "256700123123",
-        "country": "UG",
-        // "full_name": "Jane Rose",
-        // "personal_code": "10231",
-        // "tax_number": "70002307552",
-        // "city": "Kampala",
-        // "street_address": "Ntinda",
-        // "zip_code": "124538",
-        // "state": "Nakawa"
-    },
-    "payment": {
-        "currency": "UGX",
-        "amount": "500",
-        "description": "Test Payout"
-    },
-    "reference": "Your unique transaction reference",
-    "brand_id": "{{BrandId}}"
-}
-</code></pre>
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-{
-  "id": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-  "type": "payout",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "",
-    "email": "example@gmail.com",
-    "phone": "256700123123",
-    "state": "",
-    "country": "UG",
-    "zip_code": "",
-    "bank_code": "",
-    "full_name": "",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "",
-    "client_type": null,
-    "bank_account": "123456789013",
-    "personal_code": "",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "status": "initialized",
-  "is_test": false,
-  "payment": {
-    "amount": 500,
-    "paid_on": null,
-    "currency": "UGX",
-    "fee_amount": 0,
-    "net_amount": 500,
-    "description": "Test Payout",
-    "is_outgoing": true,
-    "payment_type": "payout",
-    "pending_amount": 0,
-    "remote_paid_on": null,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "reference": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747308302,
-  "event_type": "payout.created",
-  "updated_on": 1747308302,
-  "sender_name": "",
-  "execution_url": "https://gate.paytota.com/po/7c4ea981-55b1-418a-be23-ea9f5f3e1a91/paytota_proxy/",
-  "status_history": [
-    {
-      "status": "initialized",
-      "timestamp": 1747308302
-    }
-  ],
-  "transaction_data": {
-    "flow": "payform",
-    "extra": {},
-    "country": "",
-    "attempts": [],
-    "payment_method": ""
-  },
-  "reference_generated": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "recipient_card_brand": null,
-  "recipient_card_country": "",
-  "payout_method_whitelist": null
-}
-```
-
-{% endtab %}
-
-{% tab title="Headers" %}
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Authorization<mark style="color:red;">\*</mark> |        | Bearer **`{{secret key}}`** |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-| {% endtab %}                                    |        |                             |
-
-{% tab title="Respose Status" %}
-201: Created
-{% endtab %}
-{% endtabs %}
-
-{% hint style="success" %}
-The transaction ID in JSON response is then used to execute request(Step 2).
-{% endhint %}
-
-### Step 2 - Execute
-
-## Utilize the {{execution\_url}} obtained in step 1 to submit a second request.
-
-<mark style="color:green;">`POST`</mark> `{{execution_url}}`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json5
-{
-    "payout_type": "mobile"
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-// If excute is successful
-
-{
-    "status": "pending",
-    "details": {
-        "return_code": "200",
-        "message": "Transaction received for processing",
-        "transaction": {
-            "status": "pending",
-            "internal_reference": "35F1496D9E17485A800D4847F22BC720"
-        }
-    }
-}
-```
-
-```json5
-// If you have insufficient balance
-
-{
-  "status": "error",
-  "error": {
-    "code": "insufficient_funds",
-    "message": "Insufficient funds to proceed with operation."
-  }
-}
-
-```
-
-{% endtab %}
-
-{% tab title="Headers" %}
-
-| Name                                           | Type   | Description      |
-| ---------------------------------------------- | ------ | ---------------- |
-| Content-Type<mark style="color:red;">\*</mark> | String | application/json |
-
-{% endtab %}
-
-{% tab title="Response Status" %}
-200: OK
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-You will receive a callback on your webhook URL regarding the status of the transaction
-
-```
-Successful transaction  (status = success)
-Failed transaction (status = error)
-```
-
-{% endhint %}
-
-<details>
-
-<summary>Callback Example</summary>
-
-```json5
-{
-  "id": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-  "type": "payout",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "",
-    "email": "example@gmail.com",
-    "phone": "256700123123",
-    "state": "",
-    "country": "UG",
-    "zip_code": "",
-    "bank_code": "",
-    "full_name": "",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "",
-    "client_type": null,
-    "bank_account": "123456789013",
-    "personal_code": "",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "status": "success",
-  "is_test": false,
-  "payment": {
-    "amount": 500,
-    "paid_on": 1747308344,
-    "currency": "UGX",
-    "fee_amount": 0,
-    "net_amount": 500,
-    "description": "Test Payout",
-    "is_outgoing": true,
-    "payment_type": "payout",
-    "pending_amount": 0,
-    "remote_paid_on": 1747308344,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "reference": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747308302,
-  "event_type": "payout.success",
-  "updated_on": 1747308344,
-  "sender_name": "",
-  "execution_url": "https://gate.paytota.com/po/7c4ea981-55b1-418a-be23-ea9f5f3e1a91/paytota_proxy/",
-  "status_history": [
-    {
-      "status": "initialized",
-      "timestamp": 1747308302
-    },
-    {
-      "status": "pending",
-      "timestamp": 1747308339
-    },
-    {
-      "status": "success",
-      "timestamp": 1747308344
-    }
-  ],
-  "transaction_data": {
-    "flow": "server_to_server",
-    "extra": {
-      "webhook_payload": {
-        "bank": {
-          "bank_code": "SBICUGKX",
-          "bank_name": "Stanbic Bank",
-          "account_name": "Jane Rose",
-          "account_number": "123456789012"
-        },
-        "client": {
-          "city": "",
-          "email": "example@gmail.com",
-          "state": "",
-          "zip_code": "",
-          "full_name": "",
-          "tax_number": "",
-          "personal_code": "",
-          "street_address": ""
-        },
-        "message": "Transaction successful",
-        "return_code": "200",
-        "transaction": {
-          "amount": 500,
-          "mobile": "256700123123",
-          "status": "successful",
-          "country": "UG",
-          "currency": "UGX",
-          "operator": "SANDBOX",
-          "description": "",
-          "destination": "bank",
-          "transaction_type": "payout",
-          "external_reference": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-          "internal_reference": "35F1496D9E17485A800D4847F22BC720",
-          "operator_reference": "7d795431-a622-42c5-88a3-1354a90621d2"
-        }
-      }
-    },
-    "country": "",
-    "attempts": [
-      {
-        "flow": "server_to_server",
-        "error": null,
-        "extra": {
-          "webhook_payload": {
-            "bank": {
-              "bank_code": "SBICUGKX",
-              "bank_name": "Stanbic Bank",
-              "account_name": "Jane Rose",
-              "account_number": "123456789012"
-            },
-            "client": {
-              "city": "",
-              "email": "example@gmail.com",
-              "state": "",
-              "zip_code": "",
-              "full_name": "",
-              "tax_number": "",
-              "personal_code": "",
-              "street_address": ""
-            },
-            "message": "Transaction successful",
-            "return_code": "200",
-            "transaction": {
-              "amount": 500,
-              "mobile": "256700123123",
-              "status": "successful",
-              "country": "UG",
-              "currency": "UGX",
-              "operator": "SANDBOX",
-              "description": "",
-              "destination": "bank",
-              "transaction_type": "payout",
-              "external_reference": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-              "internal_reference": "35F1496D9E17485A800D4847F22BC720",
-              "operator_reference": "7d795431-a622-42c5-88a3-1354a90621d2"
-            }
-          }
-        },
-        "country": "",
-        "client_ip": "",
-        "fee_amount": 0,
-        "successful": true,
-        "payment_method": "paytota_proxy",
-        "processing_time": 1747308344
-      }
-    ],
-    "payment_method": "paytota_proxy"
-  },
-  "reference_generated": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "recipient_card_brand": "paytota_proxy",
-  "recipient_card_country": "",
-  "payout_method_whitelist": null
-}
-```
-
-</details>
-
-### Check Disbursement/Payout Status
-
-## This API method is used to query the payouts/disbursement transaction status using the transaction ID.
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/payouts/{id}/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="Respose Status" %}
-200: OK
-{% endtab %}
-{% endtabs %}
-
-# CARDS
-
-Supported currency (USD, GBP, CAD, INR, ZAR, NGN, MAD, UGX, TZS, RWF, KES, XOF, XAF, EGP, GHS, )
-
-# Card Collection
-
-### Initiate
-
-## This API method initiates a collection/purchase request and returns a JSON response.
-
-<mark style="color:green;">`POST`</mark> `{base url}/api/v1/purchases/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Authorization<mark style="color:red;">\*</mark> |        | Bearer **`{{secret key}}`** |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-
-{% tabs %}
-{% tab title="201: Created " %}
-
-{% endtab %}
-{% endtabs %}
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json5
-{
-"client": {
-    "email": "example@gmail.com",
-    "country": "AU",
-    "city": "Lisbon",
-    "street_address": "sixth street",
-    "zip_code": "3425678",
-    "state": "PT"
-    },
-"purchase": {
-    "currency": "USD",
-    "products": [{
-        "name": "test",
-        "price": 1000
-    }]
-    },
-"skip_capture": false,
-"brand_id": "{{Brand Id}}",
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-{
-  "client": {
-    "client_type": null,
-    "email": "example@gmail.com",
-    "phone": "0793457034",
-    "full_name": "Example One",
-    "personal_code": "123245",
-    "legal_name": "",
-    "brand_name": "",
-    "registration_number": "",
-    "tax_number": "",
-    "bank_account": "",
-    "bank_code": "234235",
-    "street_address": "sixth street",
-    "city": "Lisbon",
-    "zip_code": "3425678",
-    "country": "AU",
-    "state": "PT",
-    "shipping_street_address": "",
-    "shipping_city": "",
-    "shipping_zip_code": "",
-    "shipping_country": "",
-    "shipping_state": "",
-    "cc": [],
-    "bcc": [],
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ]
-  },
-  "purchase": {
-    "currency": "USD",
-    "products": [
-      {
-        "name": "test",
-        "price": 1000,
-        "quantity": "1.0000",
-        "discount": 0,
-        "tax_percent": "0.00",
-        "category": ""
-      }
-    ],
-    "language": "en",
-    "notes": "",
-    "debt": 0,
-    "subtotal_override": null,
-    "total_tax_override": null,
-    "total_discount_override": null,
-    "total_override": null,
-    "total": 1000,
-    "request_client_details": [],
-    "timezone": "UTC",
-    "due_strict": false,
-    "email_message": "",
-    "shipping_options": [],
-    "payment_method_details": {},
-    "has_upsell_products": false
-  },
-  "payment": null,
-  "issuer_details": {
-    "brand_name": "PAYTOTA",
-    "website": "https://paytota.com",
-    "legal_name": "PAYTOTA",
-    "registration_number": "80020002500244",
-    "tax_number": "",
-    "legal_street_address": "Venture Labs, Plot 23 Binayomba Road, Bugolobi",
-    "legal_country": "UG",
-    "legal_city": "Kamplaa",
-    "legal_zip_code": "23235",
-    "bank_accounts": [
-      {
-        "bank_account": "1036201557307",
-        "bank_code": "EQBLUGKAXXX"
-      }
-    ]
-  },
-  "transaction_data": {
-    "payment_method": "",
-    "flow": "payform",
-    "extra": {},
-    "country": "",
-    "attempts": []
-  },
-  "status": "created",
-  "status_history": [
-    {
-      "status": "created",
-      "timestamp": 1687258526
-    }
-  ],
-  "viewed_on": null,
-  "force_recurring": false,
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "is_test": false,
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401d1",
-  "billing_template_id": null,
-  "order_id": null,
-  "client_id": "dfb1fb80-0322-4daa-900f-b0a39cda0450",
-  "send_receipt": false,
-  "is_recurring_token": false,
-  "recurring_token": null,
-  "skip_capture": false,
-  "reference_generated": "PT213",
-  "reference": "",
-  "issued": "2023-06-20",
-  "due": 1687262125,
-  "refund_availability": "none",
-  "refundable_amount": 0,
-  "currency_conversion": null,
-  "payment_method_whitelist": null,
-  "success_redirect": "",
-  "failure_redirect": "",
-  "cancel_redirect": "",
-  "success_callback": "",
-  "marked_as_paid": false,
-  "upsell_campaigns": [],
-  "referral_campaign_id": null,
-  "referral_code": null,
-  "referral_code_details": null,
-  "referral_code_generated": null,
-  "retain_level_details": null,
-  "can_retrieve": false,
-  "can_chargeback": false,
-  "creator_agent": "",
-  "platform": "api",
-  "product": "purchases",
-  "created_from_ip": "102.218.37.140",
-  "invoice_url": null,
-  "checkout_url": "https://payments.paytota.com/p/9fd05d5c-6639-42f4-8189-a6f9e401988f/",
-  "direct_post_url": null,
-  "created_on": 1687258526,
-  "updated_on": 1687258526,
-  "type": "purchase",
-  "id": "9fd05d5c-6639-42f4-8189-a6f9e401988f"
-}
-```
-
-{% endtab %}
-
-{% tab title="Curl" %}
-
-```
-curl --location --globoff '{{base_url}}/api/v1/purchases/' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer {{Secret Key}}' \
---data-raw '{
-"client": {
-    "email": "example@gmail.com",
-    "country": "AU",
-    "city": "Lisbon",
-    "street_address": "sixth street",
-    "zip_code": "3425678",
-    "state": "PT"
-    },
-"purchase": {
-    "currency": "USD",
-    "products": [{
-        "name": "test",
-        "price": 1000
-    }]
-    },
-"skip_capture": false,
-"brand_id": "{{Brand Id}}"
-}'
-```
-
-{% endtab %}
-
-{% tab title="PHP" %}
-
-```php
-<?php
-
-$curl = curl_init();
-
-curl_setopt_array($curl, array(
-  CURLOPT_URL => '{{base_url}}/api/v1/purchases/',
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 0,
-  CURLOPT_FOLLOWLOCATION => true,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS =>'{
-"client": {
-    "email": "example@gmail.com",
-    "country": "AU",
-    "city": "Lisbon",
-    "street_address": "sixth street",
-    "zip_code": "3425678",
-    "state": "PT"
-    },
-"purchase": {
-    "currency": "USD",
-    "products": [{
-        "name": "test",
-        "price": 1000
-    }]
-    },
-"skip_capture": false,
-"brand_id": "{{Brand Id}}"
-}',
-  CURLOPT_HTTPHEADER => array(
-    'Content-Type: application/json',
-    'Authorization: Bearer {{Secret Key}}'
-  ),
-));
-
-$response = curl_exec($curl);
-
-curl_close($curl);
-echo $response;
-
-```
-
-{% endtab %}
-
-{% tab title="NodeJs" %}
-
-```javascript
-const axios = require('axios');
-let data = JSON.stringify({
-  "client": {
-    "email": "example@gmail.com",
-    "country": "AU",
-    "city": "Lisbon",
-    "street_address": "sixth street",
-    "zip_code": "3425678",
-    "state": "PT"
-  },
-  "purchase": {
-    "currency": "USD",
-    "products": [
-      {
-        "name": "test",
-        "price": 1000
-      }
-    ]
-  },
-  "skip_capture": false,
-  "brand_id": "{{Brand Id}}"
-});
-
-let config = {
-  method: 'post',
-  maxBodyLength: Infinity,
-  url: '{{base_url}}/api/v1/purchases/',
-  headers: { 
-    'Content-Type': 'application/json', 
-    'Authorization': 'Bearer {{Secret Key}}'
-  },
-  data : data
-};
-
-axios.request(config)
-.then((response) => {
-  console.log(JSON.stringify(response.data));
-})
-.catch((error) => {
-  console.log(error);
-});
-
-```
-
-{% endtab %}
-
-{% tab title="Python" %}
-
-```python
-import http.client
-import json
-
-conn = http.client.HTTPSConnection("{{base_url}}")
-payload = json.dumps({
-  "client": {
-    "email": "example@gmail.com",
-    "country": "AU",
-    "city": "Lisbon",
-    "street_address": "sixth street",
-    "zip_code": "3425678",
-    "state": "PT"
-  },
-  "purchase": {
-    "currency": "USD",
-    "products": [
-      {
-        "name": "test",
-        "price": 1000
-      }
-    ]
-  },
-  "skip_capture": False,
-  "brand_id": "{{Brand Id}}"
-})
-headers = {
-  'Content-Type': 'application/json',
-  'Authorization': 'Bearer {{Secret Key}}'
-}
-conn.request("POST", "/api/v1/purchases/", payload, headers)
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
-```
-
-{% endtab %}
-{% endtabs %}
-
-### You have two methods to collect card details from the customer .
-
-1. Redirect the customer to the **{{checkout\_url}}** on the paytota platform.
-2. Direct Post.\
-   Here you submit the customer card details from your application to the **{{checkout\_url}}** . In this case the customer will be redirected to the bank authorization page immediately.\
-   \
-   Take note the following parameters should be added to your Initial JSON body on using Direct Post **`success_redirect`**, **`failure_redirect`**\
-   After the payment is processed, the system will redirect the customer back to your website.
-
-* ```
-   <!DOCTYPE html>
-  <html>
-     <head>
-        <meta HTTP-EQUIV="Content-Type" content="text/html; charset=UTF-8">
-     </head>
-     <body>
-        <form id="form" action="{{checkout_url}}" method="POST">
-           <input type="hidden" name="cardholder_name" value="Asiman Gasanov">
-              <input type="hidden" name="card_number" value="4444 3333 2222 1111">
-              <input type="hidden" name="expires" value="11/25">
-              <input type="hidden" name="cvc" value="123">
-              <input type="hidden" name="remember_card" value="true">
-              <noscript>
-              <input type="submit" name="continue" value="Continue">
-              </noscript>
-        </form>
-     </body>
-  </html>
-  ```
-
-### Testing Integration
-
-It’s possible to test-drive all checkouts using a test Purchase.\
-\
-\- 4444 3333 2222 1111 - non-3D Secure card\
-\- 5555 5555 5555 4444 - 3D Secure card\
-\
-For both cards, please use:\
-\
-\- any cardholder name\
-\- any expiry larger or equal to the current month/year\
-\- CVC = 123\
-\
-For a failed payment, please change the CVC or expiration date
-
-{% hint style="info" %}
-You will receive a callback on your webhook URL regarding the status of the transaction
-
-```
-Successful transaction  (status = paid)
-Failed transaction (status = error)
-```
-
-{% endhint %}
-
-<details>
-
-<summary>Callback Example</summary>
-
-```json5
-{
-  "id": "761196a9-6aa2-4afd-a59f-214ad6788e5e",
-  "due": 1694609579,
-  "type": "purchase",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "London",
-    "email": "johndeo@outlook.com",
-    "phone": "+447702700000",
-    "state": "WA",
-    "country": "US",
-    "zip_code": "CT6 6HG",
-    "bank_code": "",
-    "full_name": "John Deo",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "",
-    "client_type": null,
-    "bank_account": "",
-    "personal_code": "",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "39 coromant way",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "issued": "2023-09-13",
-  "status": "paid",
-  "is_test": false,
-  "payment": {
-    "amount": 2300,
-    "paid_on": 1694606029,
-    "currency": "USD",
-    "fee_amount": 150,
-    "net_amount": 2150,
-    "description": "",
-    "is_outgoing": false,
-    "payment_type": "purchase",
-    "pending_amount": 0,
-    "remote_paid_on": 1694606028,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "product": "purchases",
-  "user_id": null,
-  "brand_id": "869aca7c-6348-4c5f-9141-6f9e908da099",
-  "order_id": null,
-  "platform": "api",
-  "purchase": {
-    "debt": 0,
-    "notes": "",
-    "total": 2300,
-    "currency": "USD",
-    "language": "en",
-    "products": [
-      {
-        "name": "deposit",
-        "price": 2300,
-        "category": "",
-        "discount": 0,
-        "quantity": "1.0000",
-        "tax_percent": "0.00"
-      }
-    ],
-    "timezone": "UTC",
-    "due_strict": false,
-    "email_message": "",
-    "total_override": null,
-    "shipping_options": [],
-    "subtotal_override": null,
-    "total_tax_override": null,
-    "has_upsell_products": false,
-    "payment_method_details": {},
-    "request_client_details": [],
-    "total_discount_override": null
-  },
-  "client_id": "70a626d4-b415-46b9-9dda-89e37ebdf1d4",
-  "reference": "325408517",
-  "viewed_on": null,
-  "company_id": "177bde08-d0a3-47b0-9601-7fec23b8d4fb",
-  "created_on": 1694605979,
-  "event_type": "purchase.paid",
-  "updated_on": 1694606029,
-  "invoice_url": null,
-  "can_retrieve": true,
-  "checkout_url": "https://gate.paytota.com/p/761196a9-6aa2-4afd-a59f-214ad6788e5e/invoice/",
-  "send_receipt": false,
-  "skip_capture": false,
-  "creator_agent": "",
-  "referral_code": null,
-  "can_chargeback": true,
-  "issuer_details": {
-    "website": "",
-    "brand_name": "PAYTOTA LIMITED",
-    "legal_city": "Kampala",
-    "legal_name": "PAYTOTA LIMITED",
-    "tax_number": "",
-    "bank_accounts": [
-      {
-        "bank_code": "Will send",
-        "bank_account": "Will send"
-      }
-    ],
-    "legal_country": "UG",
-    "legal_zip_code": "102145",
-    "registration_number": "80020002500244",
-    "legal_street_address": "Venture Labs, Plot 23 Binayomba Road, Bugolobi"
-  },
-  "marked_as_paid": false,
-  "status_history": [
-    {
-      "status": "created",
-      "timestamp": 1694605979
-    },
-    {
-      "status": "pending_execute",
-      "timestamp": 1694605986
-    },
-    {
-      "status": "paid",
-      "timestamp": 1694606029
-    }
-  ],
-  "cancel_redirect": "https://example.com/1B7fCk992UZVAbWngU0j7-w",
-  "created_from_ip": "85.208.60.10",
-  "direct_post_url": null,
-  "force_recurring": false,
-  "recurring_token": null,
-  "failure_redirect": "https://example.com/1jkfljS8Uxa-dNEGkPHLbsQ",
-  "success_callback": "https://example.com/0bCCbefX4Bi-4JXjpgB5Qpw",
-  "success_redirect": "https://example.com/1ulvVG6sAKQEUkDvKDRBX6w",
-  "transaction_data": {
-    "flow": "direct_post",
-    "extra": {
-      "card_type": "debit",
-      "card_brand": "mastercard",
-      "masked_pan": "537410******0294",
-      "card_issuer": "national westminster bank plc",
-      "expiry_year": 26,
-      "expiry_month": 12,
-      "cardholder_name": "Ryan lee",
-      "card_issuer_country": "GB"
-    },
-    "country": "GB",
-    "attempts": [
-      {
-        "flow": "direct_post",
-        "type": "execute",
-        "error": null,
-        "extra": {
-          "card_type": "debit",
-          "card_brand": "mastercard",
-          "masked_pan": "537410******0294",
-          "card_issuer": "national westminster bank plc",
-          "expiry_year": 26,
-          "expiry_month": 12,
-          "cardholder_name": "Jon Deo",
-          "card_issuer_country": "GB"
-        },
-        "country": "GB",
-        "client_ip": "84.70.164.234",
-        "fee_amount": 150,
-        "successful": true,
-        "payment_method": "mastercard",
-        "processing_time": 1694606028
-      }
-    ],
-    "payment_method": "mastercard"
-  },
-  "upsell_campaigns": [],
-  "refundable_amount": 2300,
-  "is_recurring_token": false,
-  "billing_template_id": null,
-  "currency_conversion": null,
-  "reference_generated": "PT159",
-  "refund_availability": "all",
-  "referral_campaign_id": null,
-  "retain_level_details": null,
-  "referral_code_details": null,
-  "referral_code_generated": null,
-  "payment_method_whitelist": null
-}
-```
-
-</details>
-
-### Check Collection/Purchase Status
-
-## This method is used to query the collections/purchases transaction status using the transaction ID. Please note that this API also requires authorization using the Secret Key.
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/purchases/{id}/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="201: Created " %}
-
-{% endtab %}
-{% endtabs %}
-
-# Bank
-
-Supported currencies (NGN, KES)
-
-# Bank Payout
-
-## Step 1 - Initiate
-
-## This API method is used to initiate a disbursement/payout request for which you will receive a JSON response.
-
-<mark style="color:green;">`POST`</mark> `{base url}/api/v1/payouts/`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json5
-{
-    "client": {
-        "email": "example@gmail.com",
-        "phone": "256700123123",
-        "bank_account": "123456789012",
-        "country": "UG",
-        // "full_name": "Jane Rose",
-        // "personal_code": "10231",
-        // "tax_number": "70002307552",
-        // "city": "Kampala",
-        // "street_address": "Ntinda",
-        // "zip_code": "124538",
-        // "state": "Nakawa"
-    },
-    "payment": {
-        "currency": "UGX",
-        "amount": "500",
-        "description": "Test Payout"
-    },
-    "reference": "Your unique transaction reference",
-    "brand_id": "{{BrandId}}"
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-{
-  "id": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-  "type": "payout",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "",
-    "email": "example@gmail.com",
-    "phone": "256700123123",
-    "state": "",
-    "country": "UG",
-    "zip_code": "",
-    "bank_code": "",
-    "full_name": "",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "",
-    "client_type": null,
-    "bank_account": "123456789013",
-    "personal_code": "",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "status": "initialized",
-  "is_test": false,
-  "payment": {
-    "amount": 500,
-    "paid_on": null,
-    "currency": "UGX",
-    "fee_amount": 0,
-    "net_amount": 500,
-    "description": "Test Payout",
-    "is_outgoing": true,
-    "payment_type": "payout",
-    "pending_amount": 0,
-    "remote_paid_on": null,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "reference": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747308302,
-  "event_type": "payout.created",
-  "updated_on": 1747308302,
-  "sender_name": "",
-  "execution_url": "https://gate.paytota.com/po/7c4ea981-55b1-418a-be23-ea9f5f3e1a91/paytota_proxy/",
-  "status_history": [
-    {
-      "status": "initialized",
-      "timestamp": 1747308302
-    }
-  ],
-  "transaction_data": {
-    "flow": "payform",
-    "extra": {},
-    "country": "",
-    "attempts": [],
-    "payment_method": ""
-  },
-  "reference_generated": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "recipient_card_brand": null,
-  "recipient_card_country": "",
-  "payout_method_whitelist": null
-}
-```
-
-{% endtab %}
-
-{% tab title="Headers" %}
-
-| Name                                            | Type   | Description          |
-| ----------------------------------------------- | ------ | -------------------- |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer Token         |
-| Token<mark style="color:red;">\*</mark>         | String | **`{{secret key}}`** |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json     |
-
-{% endtab %}
-
-{% tab title="Response Status" %}
-201: Created
-{% endtab %}
-{% endtabs %}
-
-## Step 2 - Execute
-
-## Utilize the {{execution\_url}} obtained in step 1 to submit a second request.
-
-<mark style="color:green;">`POST`</mark> `{{execution_url}}`
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json5
-{
-    "payout_type": "bank",
-    "bank_name": "Stanbic Bank",
-    "bank_code": "SBICUGKX",
-    "bank_account_name": "Jane Rose",
-    "bank_account_number": "123456789012"
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-
-```json5
-// If excute is successful
-
-{
-    "status": "pending",
-    "details": {
-        "return_code": "200",
-        "message": "Transaction received for processing",
-        "transaction": {
-            "status": "pending",
-            "internal_reference": "35F1496D9E17485A800D4847F22BC720"
-        }
-    }
-}
-```
-
-```json5
-{
-  "status": "error",
-  "error": {
-    "code": "insufficient_funds",
-    "message": "Insufficient funds to proceed with operation."
-  }
-}
-```
-
-{% endtab %}
-
-{% tab title="Headers" %}
-
-| Name                                            | Type   | Description          |
-| ----------------------------------------------- | ------ | -------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json     |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer Token         |
-| Token<mark style="color:red;">\*</mark>         | String | **`{{secret key}}`** |
-| {% endtab %}                                    |        |                      |
-
-{% tab title="Response Status" %}
-200: OK
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-You will receive a callback on your webhook URL regarding the status of the transaction
-
-```
-Successful transaction  (status = success)
-Failed transaction (status = error)
-```
-
-{% endhint %}
-
-<details>
-
-<summary>Callback Example</summary>
-
-```json5
-{
-  "id": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-  "type": "payout",
-  "client": {
-    "cc": [],
-    "bcc": [],
-    "city": "",
-    "email": "example@gmail.com",
-    "phone": "256700123123",
-    "state": "",
-    "country": "UG",
-    "zip_code": "",
-    "bank_code": "",
-    "full_name": "",
-    "brand_name": "",
-    "legal_name": "",
-    "tax_number": "",
-    "client_type": null,
-    "bank_account": "123456789013",
-    "personal_code": "",
-    "shipping_city": "",
-    "shipping_state": "",
-    "street_address": "",
-    "delivery_methods": [
-      {
-        "method": "email",
-        "options": {}
-      },
-      {
-        "method": "text_message",
-        "options": {
-          "custom_message": ""
-        }
-      }
-    ],
-    "shipping_country": "",
-    "shipping_zip_code": "",
-    "registration_number": "",
-    "shipping_street_address": ""
-  },
-  "status": "success",
-  "is_test": false,
-  "payment": {
-    "amount": 500,
-    "paid_on": 1747308344,
-    "currency": "UGX",
-    "fee_amount": 0,
-    "net_amount": 500,
-    "description": "Test Payout",
-    "is_outgoing": true,
-    "payment_type": "payout",
-    "pending_amount": 0,
-    "remote_paid_on": 1747308344,
-    "owned_bank_code": null,
-    "owned_bank_account": null,
-    "pending_unfreeze_on": null,
-    "owned_bank_account_id": null
-  },
-  "user_id": null,
-  "brand_id": "edd6c020-eac6-4b4e-9716-47928f3401de",
-  "reference": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "company_id": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "created_on": 1747308302,
-  "event_type": "payout.success",
-  "updated_on": 1747308344,
-  "sender_name": "",
-  "execution_url": "https://gate.paytota.com/po/7c4ea981-55b1-418a-be23-ea9f5f3e1a91/paytota_proxy/",
-  "status_history": [
-    {
-      "status": "initialized",
-      "timestamp": 1747308302
-    },
-    {
-      "status": "pending",
-      "timestamp": 1747308339
-    },
-    {
-      "status": "success",
-      "timestamp": 1747308344
-    }
-  ],
-  "transaction_data": {
-    "flow": "server_to_server",
-    "extra": {
-      "webhook_payload": {
-        "bank": {
-          "bank_code": "SBICUGKX",
-          "bank_name": "Stanbic Bank",
-          "account_name": "Jane Rose",
-          "account_number": "123456789012"
-        },
-        "client": {
-          "city": "",
-          "email": "example@gmail.com",
-          "state": "",
-          "zip_code": "",
-          "full_name": "",
-          "tax_number": "",
-          "personal_code": "",
-          "street_address": ""
-        },
-        "message": "Transaction successful",
-        "return_code": "200",
-        "transaction": {
-          "amount": 500,
-          "mobile": "256700123123",
-          "status": "successful",
-          "country": "UG",
-          "currency": "UGX",
-          "operator": "SANDBOX",
-          "description": "",
-          "destination": "bank",
-          "transaction_type": "payout",
-          "external_reference": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-          "internal_reference": "35F1496D9E17485A800D4847F22BC720",
-          "operator_reference": "7d795431-a622-42c5-88a3-1354a90621d2"
-        }
-      }
-    },
-    "country": "",
-    "attempts": [
-      {
-        "flow": "server_to_server",
-        "error": null,
-        "extra": {
-          "webhook_payload": {
-            "bank": {
-              "bank_code": "SBICUGKX",
-              "bank_name": "Stanbic Bank",
-              "account_name": "Jane Rose",
-              "account_number": "123456789012"
-            },
-            "client": {
-              "city": "",
-              "email": "example@gmail.com",
-              "state": "",
-              "zip_code": "",
-              "full_name": "",
-              "tax_number": "",
-              "personal_code": "",
-              "street_address": ""
-            },
-            "message": "Transaction successful",
-            "return_code": "200",
-            "transaction": {
-              "amount": 500,
-              "mobile": "256700123123",
-              "status": "successful",
-              "country": "UG",
-              "currency": "UGX",
-              "operator": "SANDBOX",
-              "description": "",
-              "destination": "bank",
-              "transaction_type": "payout",
-              "external_reference": "7c4ea981-55b1-418a-be23-ea9f5f3e1a91",
-              "internal_reference": "35F1496D9E17485A800D4847F22BC720",
-              "operator_reference": "7d795431-a622-42c5-88a3-1354a90621d2"
-            }
-          }
-        },
-        "country": "",
-        "client_ip": "",
-        "fee_amount": 0,
-        "successful": true,
-        "payment_method": "paytota_proxy",
-        "processing_time": 1747308344
-      }
-    ],
-    "payment_method": "paytota_proxy"
-  },
-  "reference_generated": "159e12f9-17b7-410d-a7a8-7644e1f1c6b9",
-  "recipient_card_brand": "paytota_proxy",
-  "recipient_card_country": "",
-  "payout_method_whitelist": null
-}
-```
-
-</details>
-
-## Check Disbursement/Payout Status
-
-## This API method is used to query the payouts/disbursement transaction status using the transaction ID.
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/payouts/{id}/`
-
-#### Headers
-
-| Name                                            | Type   | Description          |
-| ----------------------------------------------- | ------ | -------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json     |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer Token         |
-| Token<mark style="color:red;">\*</mark>         | String | **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="200: OK " %}
-
-{% endtab %}
-{% endtabs %}
-
-# Company Statements
-
-## Schedule a statement generation
-
-<mark style="color:green;">`POST`</mark> `{base url}/api/v1/company_statements/`
-
-This request allows you to schedule statement generation for a company. The response will include an object with fields such as `id`, `status`, and `download_url`. These are the key fields to focus on.
-
-#### Headers
-
-| Name                                            | Type   | Description          |
-| ----------------------------------------------- | ------ | -------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json     |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer               |
-| Token<mark style="color:red;">\*</mark>         | String | **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="201: Created " %}
-
-{% endtab %}
-{% endtabs %}
-
-{% tabs %}
-{% tab title="Payload" %}
-
-```json
-{
-  "format": "csv",
-  "timezone": "UTC"
-}
-```
-
-{% endtab %}
-
-{% tab title="Response" %}
-{% code overflow="wrap" fullWidth="false" %}
-
-```json
-{
-  "format": "csv",
-  "timezone": "UTC",
-  "is_test": false,
-  "company_uid": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "query_string": "",
-  "status": "pending",
-  "download_url": null,
-  "began_on": null,
-  "finished_on": null,
-  "created_on": 1698322275,
-  "updated_on": 1698322275,
-  "type": "statement_request",
-  "id": "1dd24660-527d-422a-9bfa-937c5b752eb0"
-}
-```
-
-{% endcode %}
-{% endtab %}
-
-{% tab title="Optional Parameters" %}
-
-| Name                                | Description                                                                                                                                  |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **from** integer(query)             | Filter result set to only include values older or equal to the provided Unix timestamp                                                       |
-| **to** integer(query)               | Filter result set to only include values younger than the provided Unix timestamp                                                            |
-| **paid\_from** integer(query)       | Filter paid result set to only include values older or equal to the provided Unix timestamp                                                  |
-| **paid\_to** integer(query)         | Filter paid result set to only include values younger than the provided Unix timestamp                                                       |
-| **updated\_from** integer(query)    | Filter result set to only include values older or equal to the provided last modification time Unix timestamp                                |
-| **updated\_to** integer(query)      | Filter result set to only include values younger than the provided last modification time Unix timestamp                                     |
-| **brand\_id** string($uuid)(query)  | Filter result set to only include the specified brand UUID(s)                                                                                |
-| **shop\_id** string($uuid)(query)   | Filter result set to only include the specified shop UUID(s)                                                                                 |
-| **q** string($string)(query)        | Filter result set to only include results including a specified text (search over a ton of text fields)                                      |
-| **products** string($string)(query) | Filter result set to only include results including a specified text in products                                                             |
-| **total** string($float)(query)     | Filter result set to only include results with a total between min and max value. Must include 2 values, if any - (min, max).                |
-| **currency** string(query)          | Filter result set to only include specified currency(ies)                                                                                    |
-| **payment\_method** string(query)   | <p>Filter result set to only include specified payment methods(s). </p><p><em>Available values</em> : maestro, mastercard, unknown, visa</p> |
-
-|                                                |                                                                                                                                                                                                                           |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **three\_d\_secure** string($bool)(query)      | Filter result set to only include results with a 3-D verification.                                                                                                                                                        |
-| **country** string($ISO 3166-1 alpha-2)(query) | Filter result set to only include specified client country(ies) in ISO 3166-1 alpha-2 format                                                                                                                              |
-| **status** string($string)(query)              | Filter result set to only include results with a specific status.                                                                                                                                                         |
-| **product** string(query)                      | <p>Filter result set to only include specified products(s). </p><p><em>Available values</em> : bank\_payment, chargeback, custom\_payment, invoice, payout, payout\_balance\_transfer, purchase, refund, subscription</p> |
-| {% endtab %}                                   |                                                                                                                                                                                                                           |
-| {% endtabs %}                                  |                                                                                                                                                                                                                           |
-
-## &#x20;Retrieve a statement by ID.
-
-<mark style="color:blue;">`GET`</mark> `{base url}/api/v1/company_statements/{id}/`
-
-#### Headers
-
-| Name                                            | Type   | Description                 |
-| ----------------------------------------------- | ------ | --------------------------- |
-| Content-Type<mark style="color:red;">\*</mark>  | String | application/json            |
-| Authorization<mark style="color:red;">\*</mark> | String | Bearer **`{{secret key}}`** |
-
-{% tabs %}
-{% tab title="200: OK " %}
-
-{% endtab %}
-{% endtabs %}
-
-{% tabs %}
-{% tab title="Response" %}
-{% code overflow="wrap" %}
-
-```json5
-{
-  "format": "csv",
-  "timezone": "UTC",
-  "is_test": false,
-  "company_uid": "706d0675-b131-468c-940d-bc0ea3599e7f",
-  "query_string": "",
-  "status": "success",
-  "download_url": "https://paytota-private.s3.af-south-1.amazonaws.com/706d0675-b131-468c-940d-bc0ea3599e7f/src/statement/022b9a1f-1411-4d60-b7e9-4e7daaf6903b?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2DOUUV7G3EN%2F20231026%2Faf-south-1%2Fs3%2Faws4_request&X-Amz-Date=20231026T124044Z&X-Amz-pires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=e7fd9eda97b07abadb9caad3f555a9a06815db541a4bec11110a87ed699d",
-  "began_on": 1698322277,
-  "finished_on": 1698322277,
-  "created_on": 1698322275,
-  "updated_on": 1698322277,
-  "type": "statement_request",
-  "id": "1dd24660-527d-422a-9bfa-937c5b752eb0"
-}
-```
-
-{% endcode %}
-{% endtab %}
-{% endtabs %}
-
-
-
-
-# Status & Definitions
-
-<details>
-
-<summary>Balance</summary>
-
-`description`: Company Balance in a specific currency
-
-`gross_balance` : *(integer)* Raw Company balance without any fees or reserved amounts subtracted
-
-`balance` : *(integer)* Company gross balance with transaction fees subtracted
-
-`available_balance` : *(integer)* Company balance currently available for withdrawal
-
-`reserved` : *(integer)* Amount protected from withdrawal for an amount of time as per the brand configuration
-
-`pending_outgoing` : *(integer)* Amount currently pending withdrawal
-
-`fee_sell` : *(integer)* Fees applied to transactions
-
-</details>
-
-<details>
-
-<summary>Purchase Status</summary>
-
-**PurchaseStatus**: *(string*)\
-**default**: created\
-**readOnly**: true
-
-Purchase status. Can have the following values:
-
-`created`: Purchase was created using POST /purchases/ or Billing API capabilities.
-
-***
-
-`sent`: Invoice for this purchase was sent over email using Billing API capabilities.
-
-***
-
-`viewed`: The client has viewed the payform and/or invoice details for this purchase.
-
-***
-
-`error`: There was a failed payment attempt for this purchase because of a problem with customer's payment instrument (e.g. low account balance). You can analyze the `.transaction_data` to get information on reason of the failure.
-
-***
-
-`cancelled`: Purchase was cancelled using the `POST /purchases/{id}/cancel/` endpoint; payment for it is not possible anymore.
-
-***
-
-`overdue`: Purchase is past its' `.due`, but payment for it is still possible (unless e.g. POST /purchases/{id}/cancel/ is used).
-
-***
-
-`expired`: Purchase is past its' `.due` and payment for it isn't possible anymore (as a result of `purchase.due_strict` having been set to `true`). It’s still possible to have a `paid` status after `expired` if the transaction was initiated before `expired` and the acquirer returned the successful status with delay.
-
-***
-
-`hold`: Funds are on hold for this Purchase (`.skip_capture: true` was used). You can now run `POST /capture/` or `POST /release/` for this payment to capture the payment or return funds to the client, respectively.
-
-***
-
-`released`: This Purchase previously had `hold` status, but funds have since been released and returned to the customer's card.
-
-***
-
-`pending_release`: release of funds for this Purchase is in processing, but is not finalized on the acquirer side yet. Is set by `POST /purchases/{id}/release/` operation when it takes longer than expected to process on the acquirer side.
-
-***
-
-`pending_capture`: capture of funds for this Purchase is in processing, but is not finalized on the acquirer side yet. Is set by `POST /purchases/{id}/capture/` operation when it takes longer than expected to process on the acquirer side.
-
-***
-
-`preauthorized`: A preauthorization of a card (authorization of card data without a financial transaction) was executed successfully using this Purchase. See the description of the `.skip_capture` field for more details.
-
-***
-
-`paid`: Purchase was successfully paid for.
-
-***
-
-`pending_execute`: Payment (or `hold` in case of `skip_capture`) for this Purchase is in processing, but is not finalized on the acquirer side yet.
-
-***
-
-`pending_charge`: Recurring payment for this Purchase is in processing, but is not finalized on the acquirer side yet. Is set by `POST /purchases/{id}/charge/` operation when it takes longer than expected to process on the acquirer side.
-
-***
-
-`retrieved`: A retrieval request was registered for this, previously paid, Purchase.
-
-***
-
-`charged_back`: A chargeback was registered for this, previously paid, Purchase.
-
-***
-
-`pending_refund`: a refund (full or partial) for this Purchase is in processing, but is not finalized on the acquirer side yet. Is set by `POST /purchases/{id}/refund/` operation when it takes longer than expected to process on the acquirer side.
-
-***
-
-`refunded`: This Purchase had its payment refunded, fully or partially.
-
-Enum:\
-\[ created, sent, viewed, error, cancelled, overdue, expired, hold, released, pending\_release, pending\_capture, preauthorized, paid, pending\_execute, pending\_charge, chargeback, pending\_refund, refunded ]
-
-</details>
-
-<details>
-
-<summary>Payout Status</summary>
-
-**PayoutStatus**: *(string)* \
-**default**: initialized \
-**readOnly**: true&#x20;
-
-Payout status. Can have the following values:
-
-`initialized`: Payout was created, but not executed. Initial status to new Payouts.
-
-`pending`: Payout's execution is currently pending
-
-`error`: An error has occurred during the execution. Execution can be attempted again.
-
-`success`: Payout was executed successfully.
-
-Enum: \[ initialized, pending, error, success ]
-
-</details>
-
-<details>
-
-<summary>Event</summary>
-
-**Event**: string
-
-Available event types and when they are emitted:
-
-`purchase.created`: Emitted when a Purchase is created. This happens as a result of POST /purchases/ request executed successfully or of any of the Billing API methods, including scheduled billing run by a BillingTemplate with is\_subscription = true. Purchase.status will be == `created` in the received payload.
-
-***
-
-`purchase.paid`: Emitted when a Purchase is paid for. Purchase.status will be == `paid`. Happens when a payform is submitted (for a Purchase having `skip_capture == false`) and a successful payment is done by the payer or in case of /capture/ or /charge/ API requests executed successfully.
-
-***
-
-`purchase.payment_failure`: Emitted when payer submits a payment using the payform, but it doesn't complete successfully (e.g. because payer's account balance is insufficient). Purchase.status will be == `error`.
-
-***
-
-`purchase.pending_execute`: Emitted when transaction execution takes longer than expected on the acquirer side. See `pending_execute` Purchase status. When transaction becomes finalized, a `purchase.paid`, `purchase.hold` or `purchase.payment_failed` callback will be emitted.
-
-***
-
-`purchase.pending_charge`: Emitted when transaction execution takes longer than expected on the acquirer side. See `pending_charge` Purchase status. When transaction becomes finalized, a `purchase.paid` or `purchase.payment_failed` callback will be emitted.
-
-***
-
-`purchase.cancelled`: Emitted once POST /purchases/{id}/cancel/ request succeeds. It won't be possible to pay for the related Purchase after that. Purchase.status will be == `cancelled`.
-
-***
-
-`purchase.hold`: Emitted when a Purchase having `skip_capture == true` has its payform submitted and "payment" performed successfully. The specified amount of funds will be placed on hold. Purchase.status will be == `hold`.
-
-***
-
-`purchase.captured`: Emitted when the POST /purchases/{id}/capture/ request for a Purchase that previously had the status of `hold` succeeds. Purchase.status will be == `paid`.
-
-***
-
-`purchase.pending_capture`: Emitted when transaction execution takes longer than expected on the acquirer side. See `pending_capture` Purchase status. When transaction becomes finalized, a `purchase.captured` callback will be emitted.
-
-***
-
-`purchase.released`: Emitted when the POST /purchases/{id}/release/ request for a Purchase that previously had the status of `hold` succeeds. Funds reserved will be released with no payment performed. Purchase.status will be == `released`.
-
-***
-
-`purchase.pending_release`: Emitted when transaction execution takes longer than expected on the acquirer side. See `pending_release` Purchase status. When transaction becomes finalized, a `purchase.released` callback will be emitted.
-
-***
-
-`purchase.preauthorized`: Emitted when preauthorization scenario (see description for the Purchase.skip\_capture field) is executed successfully. Purchase will have a status of `preauthorized`.
-
-***
-
-`purchase.recurring_token_deleted`: Emitted when the POST /purchases/{id}/delete\_recurring\_token/ request is executed successfully, deleting the recurring token associated with a Purchase. Purchase status will be the same as it were prior to this event.
-
-***
-
-`purchase.pending_recurring_token_delete`: Emitted when token deletion takes longer than expected on the acquirer side. When operation is finalized, a `purchase.recurring_token_deleted` callback will be emitted.
-
-***
-
-`purchase.subscription_charge_failure`: Emitted when an attempt to charge some Client's subscription-generated Purchase, using the token (e.g. card) they saved for their subscription, fails. Can only be emitted for a Purchase spawned from a BillingTemplate having is\_subscription == true. Usually means the system can't charge the subscriber Client's card because e.g. their account balance is insufficient or card is expired, hence an invoice to be paid manually will be automatically mailed to them. Purchase.status in the returned payload will be == `sent`.
-
-***
-
-`purchase.pending_refund`: Emitted when refund transaction execution takes longer than expected on the acquirer side. See `pending_refund` Purchase status. When refund becomes finalized, a `payment.refunded` callback will ne emitted.
-
-***
-
-`payment.refunded`: Emitted when a Purchase is refunded (as a result of POST /purchases/{id}/capture/ request done successfully or action performed in company's frontoffice system). The returned data will be a Payment object generated as a result of this action. A link to the original Purchase (that will have a status of `refunded`) will be present in the `related_to` field of this Payment.
-
-***
-
-`billing_template_client.subscription_billing_cancelled`: Emitted when a subscriber represented by this event's related BillingTemplateClient cancels their subscription using an email link available in the receipts he receives. The respective BillingTemplateClient will have its `status` set to `subscription_paused` as a result.
-
-***
-
-`payout.pending`: Emitted when Payout execution has been initiated and is currently processing.
-
-***
-
-`payout.failed`: Emitted when a Payout processing was completed with an error. Payout.status will be == `error`. Note that payouts can spend up to 3-5 days (depending on the payout provider) in processing after being initiated.
-
-***
-
-`payout.success`: Emitted when a Payout is successfully processed. Payout.status will be == `success`. Note that payouts can spend up to 3-5 days (depending on the payout provider) in processing after being initiated.
-
-***
-
-`payment.charged_back`: Emitted when a Payment is charged\_back.
-
-***
-
-`purchase.viewed`: Emitted when a Purchase is viewed.
-
-***
-
-`purchase.settled`: Emitted when a Purchase is settled.
-
-***
-
-`payout.created`: Emitted when a Payout is created.
-
-Enum:\
-\[ purchase.created, purchase.paid, purchase.payment\_failure, purchase.pending\_execute, purchase.pending\_charge, purchase.cancelled, purchase.hold, purchase.captured, purchase.pending\_capture, purchase.released, purchase.pending\_release, purchase.preauthorized, purchase.pending\_recurring\_token\_delete, purchase.recurring\_token\_deleted, purchase.subscription\_charge\_failure, purchase.pending\_refund, payment.refunded, billing\_template\_client.subscription\_billing\_cancelled, payout.pending, payout.failed, payout.success, payment.charged\_back, purchase.viewed, purchase.settled, payout.created ]
-
-</details>
-
-# Get Started
-
-To effectively utilize the USSD API, follow these steps:
-
-1. Begin by registering a shortcode with us.
-2. Share your webhook with us. This webhook acts as a callback mechanism, triggered by an incoming user request with the registered shortcode. \
-   Whenever such a request is received on our platform, we will make an HTTP POST request to your provided webhook. \
-   The payload sent to your webhook will contain the request data in JSON format (Content-Type: application/json). \
-   \
-   **Here's an example of a sample payload:**
-
-```json5
-{
-  "shortcode": "165",
-  "msisdn": "256756070595",  
-  "mccmnc":"64101",
-  "sessionid": "50b1be9cb6a90",
-  "state": "START",
-  "message": "1"
-}
-```
-
-3. Your server should respond with the desired message to be displayed on the user's handset in JSON format (Content-Type: application/json). \
-   The response should include the same payload structure as the received request, with an updated state. \
-   \
-   **Here's an example of an expected response from your server:**
-
-```json5
-{
-  "msisdn": "256756070595",
-  "sessionid": "50b1be9cb6a90",
-  "state": "CONTINUE",
-  "message": "Hello world. Welcome to LTD"
-}
-```
-
-{% hint style="info" %}
-The USSD API operates with three different states:
-
-* **START**: This state is sent when a new session is initiated by the user.
-* **CONTINUE**: Your server should respond with this state if you wish to continue the session.
-* **END**: Your server should respond with this state if you want to terminate the session.
-  {% endhint %}
-
-4. It's important to note that every request we send you will include a **sessionid**, which should be maintained and used until the session is completed.
-5. Avoid including special characters in your USSD Menu to ensure seamless access to your USSD services. Telcos may encounter difficulties in rendering content with special characters, potentially causing disruptions in the user's ability to utilize your USSD services.
-6. Payloads are signed using public-key cryptography to guarantee the authenticity of delivered callbacks. Each callback delivery request includes a **Signature** header field. This field contains a base64-encoded RSA PKCS#1 v1.5 signature of the SHA256 digest of the request body buffer.
+1. Core Reverence Technology keywords
+
+These should be your highest-priority branded and commercial terms:
+
+Reverence Technology
+Reverence Technology Uganda
+Reverence Technology Uganda Limited
+Reverence Technology Kampala
+Reverence Technology software
+Reverence Technology software development
+Reverence Technology apps
+Reverence Technology web development
+Reverence Technology IT solutions
+Reverence Technology digital solutions
+Reverence Technology developers
+Reverence Technology services
+Reverence Technology company
+Reverence Technology Ltd
+Reverence Technology Uganda website
+Reverence Technology Kampala Uganda
+Reverence Technology software company
+2. Software development keywords
+High-value commercial keywords
+software development Uganda
+software development company Uganda
+software development companies in Uganda
+software developers Uganda
+software development Kampala
+software developers Kampala
+software company Uganda
+software companies in Uganda
+software company Kampala
+custom software development Uganda
+custom software development Kampala
+bespoke software development Uganda
+bespoke software development Kampala
+custom software company Uganda
+custom software solutions Uganda
+business software development Uganda
+enterprise software development Uganda
+professional software developers Uganda
+affordable software development Uganda
+software development services Uganda
+software development agency Uganda
+software development firm Uganda
+software engineering company Uganda
+software engineering services Uganda
+application development Uganda
+application development company Uganda
+application development Kampala
+software solutions Kampala
+software solutions Uganda
+digital solutions company Uganda
+technology solutions Uganda
+Long-tail keywords
+best software development company in Uganda
+best software developers in Uganda
+best software company in Kampala
+affordable software developers in Uganda
+custom software developers in Kampala
+custom software development company in Uganda
+professional software development company Uganda
+software company for small businesses Uganda
+software development company for businesses Uganda
+software developers for startups in Uganda
+software development for Ugandan businesses
+locally developed software Uganda
+Ugandan software development company
+software solutions for Ugandan businesses
+3. Web development keywords
+web development Uganda
+web development company Uganda
+web developers Uganda
+web design Uganda
+web design company Uganda
+website development Uganda
+website development company Uganda
+website designers Uganda
+website designers Kampala
+website developers Kampala
+web development Kampala
+web design Kampala
+website development Kampala
+website design Kampala
+professional web developers Uganda
+custom website development Uganda
+custom web development Uganda
+responsive web design Uganda
+modern website development Uganda
+business website development Uganda
+corporate website development Uganda
+website development agency Uganda
+web development agency Kampala
+website development services Uganda
+website design services Uganda
+web application development Uganda
+web application developers Uganda
+full stack web development Uganda
+full stack developers Uganda
+Buyer-intent long tails
+best web development company in Uganda
+best website developers in Kampala
+affordable website development Uganda
+affordable web designers Kampala
+professional website developers Uganda
+website development company for businesses Uganda
+website development for small businesses Uganda
+custom website developers Kampala
+ecommerce website developers Uganda
+corporate website designers Uganda
+website development company Kampala Uganda
+4. Mobile app development
+
+This should be a major keyword cluster if mobile applications are one of your core services.
+
+mobile app development Uganda
+mobile app developers Uganda
+mobile application development Uganda
+mobile application developers Uganda
+mobile app development Kampala
+mobile app developers Kampala
+app development company Uganda
+app development company Kampala
+mobile application company Uganda
+custom mobile app development Uganda
+custom app development Uganda
+Android app development Uganda
+Android app developers Uganda
+iOS app development Uganda
+iOS app developers Uganda
+Android and iOS app development Uganda
+cross platform app development Uganda
+Flutter app development Uganda
+Flutter developers Uganda
+React Native developers Uganda
+mobile software development Uganda
+business mobile app development Uganda
+enterprise mobile app development Uganda
+mobile app design Uganda
+mobile app UI UX Uganda
+mobile application design Uganda
+mobile app development agency Uganda
+Long-tail
+best mobile app developers in Uganda
+mobile app development company Kampala
+affordable mobile app development Uganda
+mobile app development for businesses Uganda
+custom mobile applications Uganda
+build an Android app in Uganda
+build an iPhone app in Uganda
+build a mobile app for my business Uganda
+mobile app developers for startups Uganda
+mobile app development company for startups Uganda
+5. Web applications / SaaS
+web application development Uganda
+web application developers Uganda
+web app development Uganda
+web app developers Kampala
+custom web applications Uganda
+business web applications Uganda
+enterprise web applications Uganda
+SaaS development Uganda
+SaaS developers Uganda
+SaaS development company Uganda
+SaaS application development Uganda
+cloud software development Uganda
+cloud application development Uganda
+online software development Uganda
+browser based applications Uganda
+custom online systems Uganda
+online business systems Uganda
+digital platforms development Uganda
+platform development Uganda
+software platform development Uganda
+marketplace development Uganda
+online marketplace development Uganda
+6. Business automation
+
+This is an excellent commercial keyword category because businesses are searching for solutions to problems rather than simply “software.”
+
+business automation Uganda
+business process automation Uganda
+business automation software Uganda
+business process automation software Uganda
+workflow automation Uganda
+business management software Uganda
+business management systems Uganda
+business management software Kampala
+business process management Uganda
+digital business solutions Uganda
+business digital transformation Uganda
+business technology solutions Uganda
+business software solutions Uganda
+business automation company Uganda
+workflow management software Uganda
+automated business systems Uganda
+digital workflow solutions Uganda
+process automation company Uganda
+automation software development Uganda
+business systems development Uganda
+Problem-focused keywords
+automate business processes Uganda
+automate business operations Uganda
+reduce manual work with software Uganda
+business software to manage operations Uganda
+software to manage a business Uganda
+software to automate business Uganda
+digitalize business processes Uganda
+replace spreadsheets with software Uganda
+custom business management system Uganda
+7. ERP keywords
+ERP software Uganda
+ERP system Uganda
+ERP development Uganda
+ERP software development Uganda
+ERP developers Uganda
+ERP company Uganda
+ERP solutions Uganda
+ERP systems Kampala
+custom ERP software Uganda
+custom ERP development Uganda
+business ERP Uganda
+enterprise resource planning Uganda
+enterprise resource planning software Uganda
+ERP implementation Uganda
+ERP integration Uganda
+ERP consulting Uganda
+ERP customization Uganda
+ERP software for businesses Uganda
+affordable ERP software Uganda
+cloud ERP Uganda
+web based ERP Uganda
+ERP system development Kampala
+Industry ERP keywords
+school ERP Uganda
+hospital ERP Uganda
+hotel ERP Uganda
+restaurant ERP Uganda
+retail ERP Uganda
+wholesale ERP Uganda
+construction ERP Uganda
+accounting ERP Uganda
+inventory ERP Uganda
+HR ERP Uganda
+business ERP Kampala
+8. E-commerce development
+ecommerce development Uganda
+ecommerce website development Uganda
+ecommerce website developers Uganda
+ecommerce developers Kampala
+ecommerce company Uganda
+ecommerce solutions Uganda
+online store development Uganda
+online shop development Uganda
+ecommerce software Uganda
+ecommerce platform development Uganda
+custom ecommerce development Uganda
+ecommerce application development Uganda
+ecommerce mobile app Uganda
+online marketplace development Uganda
+marketplace software Uganda
+marketplace app development Uganda
+multi vendor marketplace Uganda
+multi vendor ecommerce Uganda
+ecommerce integration Uganda
+payment gateway integration Uganda
+online payment integration Uganda
+ecommerce solutions Kampala
+Commercial long tails
+best ecommerce developers in Uganda
+ecommerce website development company Uganda
+build an online shop in Uganda
+build an ecommerce website Uganda
+build an online marketplace Uganda
+ecommerce app developers Uganda
+custom ecommerce website Uganda
+online marketplace developers Uganda
+9. School management software
+
+Given your experience building systems for schools, this can become a very strong vertical.
+
+school management system Uganda
+school management software Uganda
+school ERP Uganda
+school ERP software Uganda
+school management system Kampala
+school software Uganda
+school administration software Uganda
+school information management system Uganda
+student management system Uganda
+student information system Uganda
+school fees management system Uganda
+school accounting software Uganda
+school finance management system Uganda
+school attendance system Uganda
+school examination management system Uganda
+school results management system Uganda
+school reporting system Uganda
+school communication system Uganda
+school portal Uganda
+student portal Uganda
+parent portal Uganda
+teacher management system Uganda
+school website development Uganda
+school mobile app Uganda
+school mobile application Uganda
+school digital management system Uganda
+High-intent searches
+best school management software Uganda
+school management system developers Uganda
+school ERP developers Uganda
+affordable school management system Uganda
+school management software Kampala
+custom school management system Uganda
+school software development company Uganda
+school fees management software Uganda
+10. Restaurant software
+restaurant management system Uganda
+restaurant management software Uganda
+restaurant POS Uganda
+restaurant POS system Uganda
+restaurant software Uganda
+restaurant ERP Uganda
+restaurant ordering system Uganda
+restaurant online ordering system Uganda
+restaurant mobile app Uganda
+restaurant website development Uganda
+restaurant billing software Uganda
+restaurant inventory software Uganda
+restaurant accounting software Uganda
+restaurant stock management system Uganda
+food ordering app development Uganda
+food delivery app development Uganda
+restaurant technology solutions Uganda
+11. Retail & POS
+POS system Uganda
+POS software Uganda
+point of sale system Uganda
+point of sale software Uganda
+POS developers Uganda
+POS development Uganda
+retail management software Uganda
+retail software Uganda
+retail ERP Uganda
+inventory management software Uganda
+inventory system Uganda
+stock management software Uganda
+stock management system Uganda
+sales management software Uganda
+business POS Uganda
+shop management software Uganda
+supermarket POS Uganda
+supermarket management system Uganda
+pharmacy POS Uganda
+pharmacy management software Uganda
+wholesale management software Uganda
+12. Hospital / healthcare software
+hospital management system Uganda
+hospital management software Uganda
+hospital ERP Uganda
+healthcare software Uganda
+healthcare management system Uganda
+clinic management software Uganda
+clinic management system Uganda
+medical software Uganda
+medical management system Uganda
+hospital information system Uganda
+patient management system Uganda
+patient records software Uganda
+electronic medical records Uganda
+appointment management system Uganda
+pharmacy management system Uganda
+laboratory management system Uganda
+healthcare app development Uganda
+hospital software developers Uganda
+healthcare software developers Uganda
+13. NGO & nonprofit software
+NGO management software Uganda
+NGO management system Uganda
+NGO ERP Uganda
+NGO software development Uganda
+nonprofit management software Uganda
+donor management system Uganda
+project management software NGO Uganda
+NGO reporting system Uganda
+NGO database system Uganda
+beneficiary management system Uganda
+monitoring and evaluation software Uganda
+M&E software Uganda
+M&E system development Uganda
+NGO digital solutions Uganda
+NGO technology solutions Uganda
+NGO website development Uganda
+14. Financial & accounting systems
+accounting software Uganda
+accounting system development Uganda
+financial management software Uganda
+financial management system Uganda
+accounting software developers Uganda
+finance software Uganda
+bookkeeping software Uganda
+invoicing software Uganda
+invoice management system Uganda
+expense management software Uganda
+payroll software Uganda
+payroll management system Uganda
+employee payroll system Uganda
+loan management software Uganda
+SACCO management software Uganda
+SACCO management system Uganda
+savings management software Uganda
+microfinance software Uganda
+financial software development Uganda
+15. API & system integration
+API development Uganda
+API developers Uganda
+API integration Uganda
+software integration Uganda
+system integration Uganda
+systems integration company Uganda
+third party API integration Uganda
+payment API integration Uganda
+mobile money API integration Uganda
+MTN Mobile Money API integration Uganda
+Airtel Money API integration Uganda
+payment gateway integration Uganda
+Pesapal integration Uganda
+Flutterwave integration Uganda
+Stripe integration Uganda
+Paystack integration Uganda
+SMS API integration Uganda
+WhatsApp API integration Uganda
+Google API integration Uganda
+Firebase development Uganda
+Firebase developers Uganda
+16. Cloud & hosting
+cloud software Uganda
+cloud application development Uganda
+cloud solutions Uganda
+cloud computing Uganda
+cloud development Uganda
+cloud developers Uganda
+cloud migration Uganda
+cloud hosting Uganda
+website hosting Uganda
+application hosting Uganda
+software hosting Uganda
+managed cloud services Uganda
+cloud infrastructure Uganda
+cloud technology company Uganda
+cloud solutions Kampala
+17. Database development
+database development Uganda
+database management Uganda
+database developers Uganda
+database software Uganda
+custom database systems Uganda
+database design Uganda
+database management systems Uganda
+business database development Uganda
+SQL developers Uganda
+MySQL developers Uganda
+PostgreSQL developers Uganda
+Supabase developers Uganda
+cloud database development Uganda
+18. UI/UX design
+UI UX design Uganda
+UI UX designers Uganda
+UX design Kampala
+UI design Uganda
+website UI design Uganda
+mobile app UI UX Uganda
+application UI design Uganda
+user experience design Uganda
+product design Uganda
+digital product design Uganda
+UX research Uganda
+interface design Uganda
+web design agency Uganda
+mobile app design company Uganda
+19. Digital transformation
+digital transformation Uganda
+digital transformation company Uganda
+digital transformation services Uganda
+digital transformation Kampala
+digitalization services Uganda
+digital business transformation Uganda
+digital transformation solutions Uganda
+technology consulting Uganda
+IT consulting Uganda
+IT consultancy Uganda
+technology consulting company Uganda
+digital strategy Uganda
+business digitalization Uganda
+digital innovation Uganda
+digital solutions provider Uganda
+20. IT consulting
+IT company Uganda
+IT services Uganda
+IT solutions Uganda
+IT support Uganda
+IT support company Uganda
+IT consulting Uganda
+IT consultancy Kampala
+technology company Uganda
+technology company Kampala
+ICT company Uganda
+ICT solutions Uganda
+ICT services Uganda
+computer services Uganda
+technology solutions company Uganda
+IT solutions provider Uganda
+managed IT services Uganda
+21. Cybersecurity-related keywords
+
+Only use these prominently if Reverence actually offers these services.
+
+cybersecurity Uganda
+cybersecurity company Uganda
+cybersecurity services Uganda
+cyber security solutions Uganda
+information security Uganda
+data security Uganda
+website security Uganda
+application security Uganda
+software security Uganda
+cloud security Uganda
+network security Uganda
+cybersecurity consulting Uganda
+penetration testing Uganda
+vulnerability assessment Uganda
+data protection Uganda
+cybersecurity Kampala
+22. Technologies / development stack
+
+If these are technologies you genuinely use, create technology-specific pages or blog content around them.
+
+JavaScript / TypeScript
+JavaScript developers Uganda
+JavaScript development Uganda
+TypeScript developers Uganda
+TypeScript development Uganda
+Node.js developers Uganda
+Node.js development Uganda
+React
+React developers Uganda
+React development Uganda
+React web development Uganda
+React application development Uganda
+Next.js
+Next.js developers Uganda
+Next.js development Uganda
+Next.js website development Uganda
+Next.js developers Kampala
+Flutter
+Flutter developers Uganda
+Flutter app development Uganda
+Flutter development company Uganda
+Flutter mobile app development Uganda
+Flutter developers Kampala
+React Native
+React Native developers Uganda
+React Native app development Uganda
+React Native development company Uganda
+PHP
+PHP developers Uganda
+PHP development Uganda
+PHP web development Uganda
+PHP software development Uganda
+Python
+Python developers Uganda
+Python development Uganda
+Python software development Uganda
+Python web development Uganda
+Firebase
+Firebase developers Uganda
+Firebase development Uganda
+Firebase app development Uganda
+Firebase authentication Uganda
+Supabase
+Supabase developers Uganda
+Supabase development Uganda
+Supabase database development Uganda
+23. AI / emerging technology
+
+If you're building AI products, this can become a significant future-facing cluster.
+
+AI development Uganda
+artificial intelligence Uganda
+AI software development Uganda
+AI developers Uganda
+AI application development Uganda
+AI app development Uganda
+AI solutions Uganda
+AI company Uganda
+AI technology company Uganda
+machine learning Uganda
+machine learning developers Uganda
+generative AI Uganda
+generative AI development Uganda
+AI chatbot development Uganda
+AI chatbot Uganda
+AI automation Uganda
+AI business solutions Uganda
+AI integration Uganda
+AI consulting Uganda
+intelligent software Uganda
+intelligent applications Uganda
+AI-powered applications Uganda
+24. E-government / institutional systems
+government software development Uganda
+government systems development Uganda
+institutional management software Uganda
+institutional software Uganda
+digital government solutions Uganda
+public sector software Uganda
+government digital transformation Uganda
+database systems Uganda
+information management systems Uganda
+records management system Uganda
+digital records management Uganda
+document management system Uganda
+online application system Uganda
+online registration system Uganda
+digital reporting system Uganda
+25. University / campus software
+university management system Uganda
+university software Uganda
+university ERP Uganda
+university student portal Uganda
+university website development Uganda
+campus management system Uganda
+student information system Uganda
+student portal development Uganda
+university mobile app Uganda
+campus marketplace development Uganda
+university marketplace software Uganda
+campus marketplace Uganda
+student marketplace app Uganda
+university e-learning system Uganda
+26. Location-based keywords
+
+This is very important for local SEO.
+
+Uganda
+software company Uganda
+technology company Uganda
+tech company Uganda
+IT company Uganda
+software developers Uganda
+app developers Uganda
+web developers Uganda
+digital agency Uganda
+software development Uganda
+IT solutions Uganda
+technology solutions Uganda
+software services Uganda
+app development Uganda
+Kampala
+software company Kampala
+software developers Kampala
+software development Kampala
+technology company Kampala
+tech company Kampala
+IT company Kampala
+IT solutions Kampala
+app developers Kampala
+mobile app developers Kampala
+web developers Kampala
+website developers Kampala
+web development Kampala
+software engineers Kampala
+custom software Kampala
+digital solutions Kampala
+Other Ugandan cities
+
+Build location variations where you can actually serve those markets:
+
+software company Entebbe
+software company Jinja
+software company Mbarara
+software company Mbale
+software company Gulu
+software company Fort Portal
+software company Masaka
+software company Mukono
+software company Wakiso
+software developers Jinja
+software developers Mbarara
+software developers Entebbe
+web developers Jinja
+web developers Mbarara
+app developers Jinja
+IT company Jinja
+IT company Mbarara
+27. East Africa keywords
+
+Once Uganda is established, expand geographically.
+
+software development East Africa
+software company East Africa
+software developers East Africa
+technology company East Africa
+IT solutions East Africa
+mobile app development East Africa
+web development East Africa
+custom software East Africa
+digital transformation East Africa
+software development Kenya
+software development Tanzania
+software development Rwanda
+software development South Sudan
+software development Burundi
+East African software company
+African software development company
+African technology company
+African software developers
+28. Industry + software combinations
+
+These are especially powerful because they combine what you build + who needs it.
+
+software for schools Uganda
+software for hospitals Uganda
+software for restaurants Uganda
+software for hotels Uganda
+software for shops Uganda
+software for supermarkets Uganda
+software for pharmacies Uganda
+software for NGOs Uganda
+software for churches Uganda
+software for SACCOs Uganda
+software for companies Uganda
+software for SMEs Uganda
+software for startups Uganda
+software for universities Uganda
+software for businesses Uganda
+custom software for SMEs Uganda
+business software for SMEs Uganda
+digital solutions for SMEs Uganda
+technology solutions for businesses Uganda
+software solutions for enterprises Uganda
+29. Startup keywords
+startup software development Uganda
+startup app developers Uganda
+startup web development Uganda
+startup technology company Uganda
+MVP development Uganda
+MVP developers Uganda
+MVP development company Uganda
+prototype development Uganda
+startup software developers Uganda
+startup technology solutions Uganda
+build startup app Uganda
+build startup website Uganda
+SaaS startup development Uganda
+technology partner for startups Uganda
+software development partner Uganda
+30. E-learning / education technology
+EdTech Uganda
+education technology Uganda
+education software Uganda
+education technology company Uganda
+e-learning platform development Uganda
+e-learning software Uganda
+e-learning website development Uganda
+e-learning app development Uganda
+online learning platform Uganda
+LMS development Uganda
+learning management system Uganda
+LMS developers Uganda
+school e-learning system Uganda
+digital learning platform Uganda
+online education platform Uganda
+educational app development Uganda
+education app developers Uganda
+student learning app Uganda
+31. Marketplace development
+
+This is particularly relevant if you build marketplace platforms.
+
+marketplace development Uganda
+marketplace app development Uganda
+marketplace website development Uganda
+marketplace software Uganda
+online marketplace Uganda
+online marketplace development Uganda
+digital marketplace development Uganda
+ecommerce marketplace Uganda
+multi vendor marketplace Uganda
+multi vendor marketplace software Uganda
+marketplace platform development Uganda
+B2B marketplace development Uganda
+B2C marketplace development Uganda
+service marketplace development Uganda
+rental marketplace development Uganda
+gig marketplace development Uganda
+classified marketplace development Uganda
+32. Booking & reservation systems
+booking system Uganda
+booking software Uganda
+online booking system Uganda
+reservation system Uganda
+reservation software Uganda
+appointment booking system Uganda
+appointment software Uganda
+hotel booking system Uganda
+restaurant booking system Uganda
+event booking system Uganda
+ticket booking system Uganda
+ticketing software Uganda
+event ticketing system Uganda
+online ticketing Uganda
+event management software Uganda
+event management system Uganda
+33. Logistics / delivery
+logistics software Uganda
+logistics management system Uganda
+fleet management software Uganda
+fleet management system Uganda
+delivery management software Uganda
+delivery tracking system Uganda
+courier management software Uganda
+transport management system Uganda
+transport software Uganda
+logistics app development Uganda
+delivery app development Uganda
+courier app development Uganda
+tracking system development Uganda
+GPS tracking software Uganda
+34. Real estate software
+real estate software Uganda
+real estate management software Uganda
+property management software Uganda
+property management system Uganda
+real estate website development Uganda
+real estate app development Uganda
+property listing website Uganda
+property marketplace Uganda
+real estate marketplace Uganda
+property booking system Uganda
+real estate CRM Uganda
+real estate management system Uganda
+35. Agriculture technology
+agritech Uganda
+agricultural software Uganda
+agriculture technology Uganda
+farm management software Uganda
+farm management system Uganda
+farm management app Uganda
+agricultural app development Uganda
+agritech software development Uganda
+agricultural management system Uganda
+farmer management system Uganda
+agricultural marketplace Uganda
+agribusiness software Uganda
+farm records software Uganda
+digital agriculture Uganda
+36. CRM keywords
+CRM software Uganda
+CRM system Uganda
+CRM development Uganda
+CRM developers Uganda
+custom CRM Uganda
+customer relationship management software Uganda
+customer management system Uganda
+sales CRM Uganda
+sales management software Uganda
+lead management system Uganda
+customer database software Uganda
+CRM software development Uganda
+business CRM Uganda
+37. HR software
+HR software Uganda
+HR management system Uganda
+HR software development Uganda
+HR management software Uganda
+employee management system Uganda
+employee management software Uganda
+payroll system Uganda
+leave management system Uganda
+attendance management system Uganda
+recruitment management system Uganda
+performance management system Uganda
+human resource management system Uganda
+HR ERP Uganda
+38. Security / authentication / identity
+authentication system development Uganda
+secure software development Uganda
+user authentication Uganda
+identity management software Uganda
+access management system Uganda
+role based access control Uganda
+secure web application development Uganda
+secure mobile app development Uganda
+data privacy software Uganda
+data protection solutions Uganda
+39. Maintenance & support keywords
+
+Don't overlook these. They attract businesses that already have software.
+
+software maintenance Uganda
+software support Uganda
+software maintenance services Uganda
+website maintenance Uganda
+website support Uganda
+mobile app maintenance Uganda
+application maintenance Uganda
+software bug fixing Uganda
+website bug fixing Uganda
+software modernization Uganda
+legacy software modernization Uganda
+software upgrade services Uganda
+website redesign Uganda
+application redesign Uganda
+software technical support Uganda
+40. High-intent "hire" keywords
+
+These can be extremely valuable:
+
+hire software developers Uganda
+hire software developer Kampala
+hire web developer Uganda
+hire web developers Kampala
+hire mobile app developer Uganda
+hire app developers Kampala
+hire React developer Uganda
+hire Flutter developer Uganda
+hire Node.js developer Uganda
+hire full stack developer Uganda
+hire software company Uganda
+hire software development company Uganda
+hire website developer Uganda
+hire app development company Uganda
+outsource software development Uganda
+software development outsourcing Uganda
+IT outsourcing Uganda
+technology outsourcing Uganda
+41. "Cost / price" keywords
+
+These attract people further down the buying funnel.
+
+software development cost Uganda
+software development prices Uganda
+software development cost Kampala
+website development cost Uganda
+website design cost Uganda
+mobile app development cost Uganda
+mobile app development price Uganda
+ecommerce website cost Uganda
+ecommerce development cost Uganda
+custom software cost Uganda
+ERP software cost Uganda
+school management system price Uganda
+POS system price Uganda
+website maintenance cost Uganda
+app development cost Uganda
+
+You can create articles such as:
+
+"How Much Does It Cost to Build a Mobile App in Uganda in 2026?"
+
+That could attract extremely valuable search traffic.
+
+42. "How to" informational keywords
+
+These are ideal for your blog.
+
+how to develop software in Uganda
+how to build an app in Uganda
+how to build a website in Uganda
+how to create an ecommerce website Uganda
+how to create a mobile app Uganda
+how much does software development cost in Uganda
+how much does a website cost in Uganda
+how much does an app cost in Uganda
+how to automate a business in Uganda
+how to digitize a business in Uganda
+how to build a school management system
+how to build an ERP system
+how to build a marketplace app
+how to build an online marketplace
+how to build a POS system
+how to build a booking system
+how to build an online payment system
+how to integrate Mobile Money into an app
+how to accept Mobile Money payments online Uganda
+how to build a business management system
+43. Technology education / blog keywords
+
+These help establish Reverence as an authority.
+
+software development Uganda
+technology trends Uganda
+technology trends in Uganda
+software industry Uganda
+Uganda technology industry
+Ugandan tech companies
+technology innovation Uganda
+digital transformation Uganda
+digital economy Uganda
+software engineering Uganda
+programming Uganda
+web development Uganda
+mobile development Uganda
+artificial intelligence Uganda
+AI in Uganda
+technology for Ugandan businesses
+digital transformation for SMEs Uganda
+technology solutions for Ugandan businesses
+44. Very valuable "solution" keywords
+
+Instead of only targeting technologies, target business problems:
+
+business automation solutions Uganda
+inventory management solutions Uganda
+school management solutions Uganda
+accounting solutions Uganda
+payroll solutions Uganda
+HR solutions Uganda
+ecommerce solutions Uganda
+payment solutions Uganda
+digital payment solutions Uganda
+customer management solutions Uganda
+logistics solutions Uganda
+booking solutions Uganda
+ticketing solutions Uganda
+business intelligence solutions Uganda
+data management solutions Uganda
+document management solutions Uganda
+workflow management solutions Uganda
+enterprise solutions Uganda
+digital business solutions Uganda
+custom technology solutions Uganda
+45. Very high-value commercial combinations
+
+These are the types of phrases I would particularly prioritize:
+
+custom software development company Uganda
+software development company Kampala
+mobile app development company Uganda
+web development company Uganda
+web application development Uganda
+custom software developers Uganda
+business software development Uganda
+ERP software development Uganda
+business automation Uganda
+software solutions for businesses Uganda
+technology solutions company Uganda
+IT solutions company Uganda
+digital transformation company Uganda
+ecommerce development company Uganda
+school management software Uganda
+school ERP Uganda
+restaurant management software Uganda
+POS software Uganda
+inventory management software Uganda
+CRM software Uganda
+HR software Uganda
+custom mobile applications Uganda
+SaaS development Uganda
+marketplace development Uganda
+API integration Uganda
+software developers Kampala
+app developers Kampala
+web developers Kampala
+46. The geographic expansion strategy
+
+Don't stop at:
+
+software development Uganda
+
+Build keyword combinations systematically:
+
+Service + Location
+
+Examples:
+
+Software development + Uganda
+Software development + Kampala
+Web development + Uganda
+Web development + Kampala
+Mobile app development + Uganda
+Mobile app development + Kampala
+ERP development + Uganda
+ERP development + Kampala
+Ecommerce development + Uganda
+Ecommerce development + Kampala
+
+Then:
+
+Service + Industry + Location
+
+Examples:
+
+School management software Uganda
+Restaurant management software Kampala
+ERP software for SMEs Uganda
+Mobile app development for businesses Uganda
+Ecommerce development for Ugandan businesses
+Hospital management software Uganda
+NGO management software Uganda
+
+Then:
+
+Problem + Solution + Location
+
+Examples:
+
+Automate business processes Uganda
+Digitize business operations Uganda
+Manage inventory with software Uganda
+Automate school administration Uganda
+Manage restaurant operations Uganda
+Manage employees with software Uganda
+
+This creates hundreds of highly relevant long-tail keywords without keyword stuffing.
+
+47. Keywords you should NOT blindly target
+
+Don't try to rank for every generic technology term.
+
+For example:
+
+software
+technology
+computer
+programming
+apps
+website
+developer
+AI
+database
+
+These are extremely broad.
+
+Instead, target:
+
+custom software development company Uganda
+
+rather than simply:
+
+software
+
+And:
+
+mobile app development company Kampala
+
+rather than:
+
+apps
+
+The first group tells Google what you do, where you do it, and that the searcher may be looking to buy.
+
+48. My recommended keyword hierarchy for Reverence
+
+I'd structure your SEO around approximately 10 major pillars:
+
+Priority	SEO Pillar
+1	Custom Software Development
+2	Mobile App Development
+3	Web Development
+4	Business Automation
+5	ERP & Business Management Systems
+6	E-commerce & Marketplaces
+7	Industry-Specific Software
+8	API & System Integration
+9	Digital Transformation
+10	IT & Technology Solutions
+
+Then create dedicated pages for the major services instead of putting all these keywords on your homepage.
+
+For example:
+
+/software-development-uganda
+
+/mobile-app-development-uganda
+
+/web-development-uganda
+
+/business-automation-uganda
+
+/erp-development-uganda
+
+/ecommerce-development-uganda
+
+/school-management-software-uganda
+
+/restaurant-management-software-uganda
+
+/pos-software-uganda
+
+/custom-software-development-kampala
+
+This is much stronger SEO architecture than putting 500 keywords into one page.
+
+The most important thing
+
+Don't put this entire keyword list into your website as a giant keyword section.
+
+Google doesn't reward keyword dumping. Use the keywords naturally across your site architecture, page titles, H1/H2 headings, service descriptions, FAQs, internal links, image alt text, blog posts, structured data and location pages.
+
+For Reverence Technology specifically, I would build a keyword-to-page map next: every important keyword above mapped to a specific page, with the recommended URL slug, SEO title, meta description, H1, secondary keywords, FAQs and blog articles to target it.
+
+That would turn this list into an actual SEO strategy rather than just a keyword collection.
+
+Below is a comprehensive regional keyword bank.
+
+1. East Africa — Core Keywords
+software development East Africa
+software development company East Africa
+software developers East Africa
+software development services East Africa
+software company East Africa
+software companies East Africa
+technology company East Africa
+tech company East Africa
+IT company East Africa
+IT solutions East Africa
+technology solutions East Africa
+digital solutions East Africa
+digital transformation East Africa
+custom software East Africa
+custom software development East Africa
+enterprise software East Africa
+business software East Africa
+software engineering East Africa
+software engineering company East Africa
+application development East Africa
+mobile app development East Africa
+web development East Africa
+web design East Africa
+ecommerce development East Africa
+SaaS development East Africa
+ERP development East Africa
+business automation East Africa
+software outsourcing East Africa
+IT outsourcing East Africa
+technology consulting East Africa
+digital innovation East Africa
+software solutions for businesses East Africa
+2. East African Community (EAC)
+
+Target the regional identity directly.
+
+EAC software development
+EAC technology company
+EAC software company
+East African software company
+East African technology company
+East African software developers
+East African IT company
+East African digital solutions
+East African technology solutions
+East African software development company
+software development for EAC businesses
+digital transformation East African businesses
+software solutions East African businesses
+enterprise software East Africa
+African software company East Africa
+technology solutions for East Africa
+3. Kenya
+Country-level
+software development Kenya
+software development company Kenya
+software developers Kenya
+software company Kenya
+software companies Kenya
+technology company Kenya
+IT company Kenya
+IT solutions Kenya
+custom software Kenya
+custom software development Kenya
+business software Kenya
+enterprise software Kenya
+digital solutions Kenya
+digital transformation Kenya
+mobile app development Kenya
+mobile app developers Kenya
+web development Kenya
+web developers Kenya
+ecommerce development Kenya
+ecommerce developers Kenya
+ERP development Kenya
+ERP software Kenya
+business automation Kenya
+SaaS development Kenya
+software outsourcing Kenya
+IT outsourcing Kenya
+software engineering Kenya
+software engineering company Kenya
+application development Kenya
+Nairobi
+software development Nairobi
+software development company Nairobi
+software developers Nairobi
+software company Nairobi
+software companies Nairobi
+technology company Nairobi
+tech company Nairobi
+IT company Nairobi
+IT solutions Nairobi
+software engineers Nairobi
+custom software Nairobi
+custom software development Nairobi
+mobile app developers Nairobi
+mobile app development Nairobi
+web developers Nairobi
+web development Nairobi
+ecommerce developers Nairobi
+ERP developers Nairobi
+SaaS developers Nairobi
+business automation Nairobi
+4. Tanzania
+Country
+software development Tanzania
+software development company Tanzania
+software developers Tanzania
+software company Tanzania
+technology company Tanzania
+IT company Tanzania
+IT solutions Tanzania
+custom software Tanzania
+custom software development Tanzania
+business software Tanzania
+enterprise software Tanzania
+digital solutions Tanzania
+digital transformation Tanzania
+mobile app development Tanzania
+mobile app developers Tanzania
+web development Tanzania
+web developers Tanzania
+ecommerce development Tanzania
+ecommerce developers Tanzania
+ERP software Tanzania
+ERP development Tanzania
+business automation Tanzania
+SaaS development Tanzania
+software outsourcing Tanzania
+software engineering Tanzania
+application development Tanzania
+Dar es Salaam
+software development Dar es Salaam
+software company Dar es Salaam
+software developers Dar es Salaam
+technology company Dar es Salaam
+IT company Dar es Salaam
+custom software Dar es Salaam
+mobile app developers Dar es Salaam
+mobile app development Dar es Salaam
+web developers Dar es Salaam
+web development Dar es Salaam
+ecommerce developers Dar es Salaam
+ERP developers Dar es Salaam
+business automation Dar es Salaam
+SaaS developers Dar es Salaam
+5. Rwanda
+Country
+software development Rwanda
+software development company Rwanda
+software developers Rwanda
+software company Rwanda
+technology company Rwanda
+IT company Rwanda
+IT solutions Rwanda
+custom software Rwanda
+custom software development Rwanda
+business software Rwanda
+enterprise software Rwanda
+digital solutions Rwanda
+digital transformation Rwanda
+mobile app development Rwanda
+mobile app developers Rwanda
+web development Rwanda
+web developers Rwanda
+ecommerce development Rwanda
+ecommerce developers Rwanda
+ERP software Rwanda
+ERP development Rwanda
+business automation Rwanda
+SaaS development Rwanda
+software outsourcing Rwanda
+software engineering Rwanda
+application development Rwanda
+Kigali
+software development Kigali
+software development company Kigali
+software developers Kigali
+software company Kigali
+technology company Kigali
+IT company Kigali
+custom software Kigali
+mobile app development Kigali
+mobile app developers Kigali
+web development Kigali
+web developers Kigali
+ecommerce developers Kigali
+ERP developers Kigali
+SaaS development Kigali
+business automation Kigali
+6. Burundi
+software development Burundi
+software development company Burundi
+software developers Burundi
+software company Burundi
+technology company Burundi
+IT company Burundi
+IT solutions Burundi
+custom software Burundi
+custom software development Burundi
+business software Burundi
+enterprise software Burundi
+digital solutions Burundi
+digital transformation Burundi
+mobile app development Burundi
+mobile app developers Burundi
+web development Burundi
+web developers Burundi
+ecommerce development Burundi
+ecommerce developers Burundi
+ERP software Burundi
+ERP development Burundi
+business automation Burundi
+SaaS development Burundi
+software engineering Burundi
+application development Burundi
+Bujumbura
+software development Bujumbura
+software company Bujumbura
+software developers Bujumbura
+technology company Bujumbura
+IT company Bujumbura
+custom software Bujumbura
+mobile app developers Bujumbura
+web developers Bujumbura
+web development Bujumbura
+ecommerce developers Bujumbura
+ERP developers Bujumbura
+7. South Sudan
+software development South Sudan
+software development company South Sudan
+software developers South Sudan
+software company South Sudan
+technology company South Sudan
+IT company South Sudan
+IT solutions South Sudan
+custom software South Sudan
+custom software development South Sudan
+business software South Sudan
+enterprise software South Sudan
+digital solutions South Sudan
+digital transformation South Sudan
+mobile app development South Sudan
+mobile app developers South Sudan
+web development South Sudan
+web developers South Sudan
+ecommerce development South Sudan
+ecommerce developers South Sudan
+ERP software South Sudan
+ERP development South Sudan
+business automation South Sudan
+SaaS development South Sudan
+software engineering South Sudan
+Juba
+software development Juba
+software company Juba
+software developers Juba
+technology company Juba
+IT company Juba
+IT solutions Juba
+custom software Juba
+mobile app development Juba
+mobile app developers Juba
+web development Juba
+web developers Juba
+ecommerce developers Juba
+ERP developers Juba
+business automation Juba
+8. Democratic Republic of Congo (DRC)
+
+Use both DRC and Democratic Republic of Congo because people search both.
+
+software development DRC
+software development Congo
+software development Democratic Republic of Congo
+software development company DRC
+software development company Democratic Republic of Congo
+software developers DRC
+software developers Congo
+software company DRC
+technology company DRC
+IT company DRC
+IT solutions DRC
+custom software DRC
+custom software development DRC
+business software DRC
+enterprise software DRC
+digital solutions DRC
+digital transformation DRC
+mobile app development DRC
+mobile app developers DRC
+web development DRC
+web developers DRC
+ecommerce development DRC
+ecommerce developers DRC
+ERP software DRC
+ERP development DRC
+business automation DRC
+SaaS development DRC
+Kinshasa
+software development Kinshasa
+software development company Kinshasa
+software developers Kinshasa
+software company Kinshasa
+technology company Kinshasa
+IT company Kinshasa
+custom software Kinshasa
+mobile app development Kinshasa
+mobile app developers Kinshasa
+web development Kinshasa
+web developers Kinshasa
+ecommerce developers Kinshasa
+ERP developers Kinshasa
+SaaS development Kinshasa
+Lubumbashi
+software development Lubumbashi
+software company Lubumbashi
+software developers Lubumbashi
+technology company Lubumbashi
+IT company Lubumbashi
+web developers Lubumbashi
+mobile app developers Lubumbashi
+9. Ethiopia
+software development Ethiopia
+software development company Ethiopia
+software developers Ethiopia
+software company Ethiopia
+technology company Ethiopia
+IT company Ethiopia
+IT solutions Ethiopia
+custom software Ethiopia
+custom software development Ethiopia
+business software Ethiopia
+enterprise software Ethiopia
+digital solutions Ethiopia
+digital transformation Ethiopia
+mobile app development Ethiopia
+mobile app developers Ethiopia
+web development Ethiopia
+web developers Ethiopia
+ecommerce development Ethiopia
+ecommerce developers Ethiopia
+ERP software Ethiopia
+ERP development Ethiopia
+business automation Ethiopia
+SaaS development Ethiopia
+software engineering Ethiopia
+application development Ethiopia
+Addis Ababa
+software development Addis Ababa
+software development company Addis Ababa
+software developers Addis Ababa
+software company Addis Ababa
+technology company Addis Ababa
+IT company Addis Ababa
+IT solutions Addis Ababa
+custom software Addis Ababa
+mobile app development Addis Ababa
+mobile app developers Addis Ababa
+web development Addis Ababa
+web developers Addis Ababa
+ecommerce developers Addis Ababa
+ERP developers Addis Ababa
+SaaS developers Addis Ababa
+10. Eritrea
+software development Eritrea
+software development company Eritrea
+software developers Eritrea
+software company Eritrea
+technology company Eritrea
+IT company Eritrea
+IT solutions Eritrea
+custom software Eritrea
+custom software development Eritrea
+business software Eritrea
+digital solutions Eritrea
+digital transformation Eritrea
+mobile app development Eritrea
+mobile app developers Eritrea
+web development Eritrea
+web developers Eritrea
+ecommerce development Eritrea
+ecommerce developers Eritrea
+ERP software Eritrea
+ERP development Eritrea
+SaaS development Eritrea
+Asmara
+software development Asmara
+software company Asmara
+software developers Asmara
+technology company Asmara
+IT company Asmara
+web development Asmara
+mobile app development Asmara
+11. Somalia
+
+Somalia is another worthwhile East African/African market.
+
+software development Somalia
+software development company Somalia
+software developers Somalia
+software company Somalia
+technology company Somalia
+IT company Somalia
+IT solutions Somalia
+custom software Somalia
+business software Somalia
+digital solutions Somalia
+digital transformation Somalia
+mobile app development Somalia
+mobile app developers Somalia
+web development Somalia
+web developers Somalia
+ecommerce development Somalia
+ecommerce developers Somalia
+ERP software Somalia
+ERP development Somalia
+SaaS development Somalia
+Mogadishu
+software development Mogadishu
+software company Mogadishu
+software developers Mogadishu
+technology company Mogadishu
+IT company Mogadishu
+web development Mogadishu
+mobile app development Mogadishu
+ecommerce developers Mogadishu
+12. Djibouti
+software development Djibouti
+software development company Djibouti
+software developers Djibouti
+software company Djibouti
+technology company Djibouti
+IT company Djibouti
+custom software Djibouti
+mobile app development Djibouti
+web development Djibouti
+ecommerce development Djibouti
+ERP software Djibouti
+digital solutions Djibouti
+13. Zambia
+
+Moving southward into Africa:
+
+software development Zambia
+software development company Zambia
+software developers Zambia
+software company Zambia
+technology company Zambia
+IT company Zambia
+custom software Zambia
+mobile app development Zambia
+web development Zambia
+ecommerce development Zambia
+ERP software Zambia
+digital transformation Zambia
+Lusaka
+software development Lusaka
+software company Lusaka
+software developers Lusaka
+technology company Lusaka
+IT company Lusaka
+mobile app developers Lusaka
+web developers Lusaka
+ecommerce developers Lusaka
+14. Zimbabwe
+software development Zimbabwe
+software development company Zimbabwe
+software developers Zimbabwe
+software company Zimbabwe
+technology company Zimbabwe
+IT company Zimbabwe
+custom software Zimbabwe
+mobile app development Zimbabwe
+web development Zimbabwe
+ecommerce development Zimbabwe
+ERP software Zimbabwe
+digital transformation Zimbabwe
+Harare
+software development Harare
+software company Harare
+software developers Harare
+technology company Harare
+IT company Harare
+mobile app developers Harare
+web developers Harare
+ecommerce developers Harare
+15. Malawi
+software development Malawi
+software development company Malawi
+software developers Malawi
+software company Malawi
+technology company Malawi
+IT company Malawi
+custom software Malawi
+mobile app development Malawi
+web development Malawi
+ecommerce development Malawi
+ERP software Malawi
+digital solutions Malawi
+Lilongwe
+software development Lilongwe
+software company Lilongwe
+software developers Lilongwe
+technology company Lilongwe
+IT company Lilongwe
+mobile app developers Lilongwe
+web developers Lilongwe
+16. Mozambique
+software development Mozambique
+software development company Mozambique
+software developers Mozambique
+software company Mozambique
+technology company Mozambique
+IT company Mozambique
+custom software Mozambique
+mobile app development Mozambique
+web development Mozambique
+ecommerce development Mozambique
+ERP software Mozambique
+digital transformation Mozambique
+Maputo
+software development Maputo
+software company Maputo
+software developers Maputo
+technology company Maputo
+IT company Maputo
+mobile app developers Maputo
+web developers Maputo
+17. South Africa
+
+This is a much more competitive market, but useful for African positioning.
+
+software development South Africa
+software development company South Africa
+African software development company
+African software company
+software developers Africa
+technology company Africa
+African technology company
+custom software Africa
+enterprise software Africa
+digital transformation Africa
+mobile app development Africa
+web development Africa
+SaaS development Africa
+software engineering Africa
+software outsourcing Africa
+African software developers
+18. Pan-African keywords
+
+These are particularly important if you want Reverence Technology to eventually be perceived as an African technology company.
+
+software development Africa
+software development company Africa
+software developers Africa
+software company Africa
+technology company Africa
+tech company Africa
+African tech company
+African technology company
+African software company
+African software developers
+African software development
+African software engineering
+African technology solutions
+African digital solutions
+African IT company
+African IT solutions
+African digital transformation
+digital transformation Africa
+digital innovation Africa
+technology solutions Africa
+custom software development Africa
+enterprise software Africa
+business software Africa
+mobile app development Africa
+mobile app developers Africa
+web development Africa
+web developers Africa
+ecommerce development Africa
+ecommerce developers Africa
+SaaS development Africa
+ERP development Africa
+business automation Africa
+software outsourcing Africa
+IT outsourcing Africa
+technology outsourcing Africa
+19. African business software
+business software Africa
+business management software Africa
+business management systems Africa
+business automation Africa
+business process automation Africa
+enterprise software Africa
+enterprise software development Africa
+custom business software Africa
+business technology solutions Africa
+digital business solutions Africa
+SME software Africa
+SME technology solutions Africa
+software for African businesses
+software for African SMEs
+digital solutions for African businesses
+technology solutions for African businesses
+20. African mobile applications
+mobile app development Africa
+mobile app developers Africa
+mobile application development Africa
+mobile application developers Africa
+Android app development Africa
+iOS app development Africa
+Flutter developers Africa
+Flutter app development Africa
+React Native developers Africa
+cross platform app development Africa
+business app development Africa
+enterprise mobile apps Africa
+African app developers
+mobile software development Africa
+custom mobile applications Africa
+mobile app development company Africa
+21. African ecommerce
+ecommerce development Africa
+ecommerce developers Africa
+ecommerce website development Africa
+ecommerce software Africa
+ecommerce solutions Africa
+online marketplace development Africa
+marketplace software Africa
+marketplace app development Africa
+African ecommerce development
+African ecommerce software
+African online marketplace
+multi vendor marketplace Africa
+B2B marketplace development Africa
+B2C marketplace development Africa
+digital commerce Africa
+ecommerce technology Africa
+22. African ERP / enterprise systems
+ERP software Africa
+ERP development Africa
+ERP developers Africa
+ERP company Africa
+enterprise resource planning Africa
+enterprise software Africa
+enterprise application development Africa
+business management software Africa
+custom ERP Africa
+cloud ERP Africa
+ERP implementation Africa
+ERP integration Africa
+ERP solutions Africa
+African ERP software
+enterprise technology solutions Africa
+23. African education technology
+EdTech Africa
+EdTech company Africa
+education technology Africa
+education software Africa
+school management software Africa
+school ERP Africa
+school management system Africa
+university management software Africa
+student management system Africa
+student information system Africa
+learning management system Africa
+LMS development Africa
+e-learning platform Africa
+e-learning software Africa
+educational app development Africa
+education technology company Africa
+digital learning Africa
+24. African healthcare technology
+healthtech Africa
+healthtech company Africa
+healthcare software Africa
+healthcare technology Africa
+hospital management software Africa
+hospital management system Africa
+clinic management software Africa
+medical software Africa
+patient management system Africa
+electronic medical records Africa
+healthcare app development Africa
+medical app development Africa
+digital health Africa
+digital healthcare solutions Africa
+healthcare technology company Africa
+25. African fintech / payments
+
+Only target this heavily if Reverence is actually building fintech/payment solutions.
+
+fintech development Africa
+fintech software Africa
+fintech company Africa
+fintech solutions Africa
+financial software Africa
+payment software Africa
+payment gateway development Africa
+payment integration Africa
+mobile money integration Africa
+digital payment solutions Africa
+financial technology Africa
+banking software Africa
+SACCO software Africa
+microfinance software Africa
+loan management software Africa
+financial management software Africa
+payment API integration Africa
+26. African logistics technology
+logistics software Africa
+logistics management software Africa
+fleet management software Africa
+transport management system Africa
+delivery management software Africa
+courier software Africa
+logistics app development Africa
+delivery app development Africa
+fleet management system Africa
+transportation software Africa
+African logistics technology
+logistics technology company Africa
+27. African agriculture technology
+agritech Africa
+agritech software Africa
+agricultural technology Africa
+agriculture software Africa
+farm management software Africa
+farm management system Africa
+agricultural app development Africa
+agricultural marketplace Africa
+agribusiness software Africa
+farmer management system Africa
+digital agriculture Africa
+African agritech company
+agriculture technology company Africa
+28. African NGO / development sector software
+NGO software Africa
+NGO management software Africa
+nonprofit software Africa
+NGO management system Africa
+donor management software Africa
+beneficiary management system Africa
+M&E software Africa
+monitoring and evaluation software Africa
+project management software NGO Africa
+development sector software Africa
+NGO technology solutions Africa
+NGO digital transformation Africa
+nonprofit technology Africa
+29. African startup ecosystem keywords
+startup software development Africa
+startup developers Africa
+startup technology Africa
+African startup technology
+African tech startups
+African SaaS development
+SaaS Africa
+MVP development Africa
+MVP developers Africa
+startup app development Africa
+startup web development Africa
+startup software company Africa
+technology partner for African startups
+software development for African startups
+African software outsourcing
+African technology solutions for startups
+30. Outsourcing keywords
+
+This is potentially one of the highest-value international clusters for Reverence.
+
+software outsourcing Africa
+software development outsourcing Africa
+African software outsourcing
+outsource software development Africa
+outsource software development Uganda
+outsource software developers Uganda
+offshore software development Africa
+nearshore software development Africa
+software development outsourcing East Africa
+IT outsourcing Africa
+IT outsourcing East Africa
+IT outsourcing Uganda
+dedicated developers Africa
+dedicated software developers Uganda
+remote software developers Africa
+remote development team Africa
+hire African developers
+hire East African developers
+hire Ugandan developers
+African development team
+East African development team
+31. "Hire developers" regional keywords
+hire software developers Africa
+hire software developers East Africa
+hire developers Uganda
+hire developers Kenya
+hire developers Rwanda
+hire developers Tanzania
+hire developers Ethiopia
+hire developers South Africa
+hire mobile app developers Africa
+hire web developers Africa
+hire Flutter developers Africa
+hire React developers Africa
+hire Node.js developers Africa
+hire full stack developers Africa
+hire software development company Africa
+hire African software developers
+hire East African software developers
+32. Regional "best company" keywords
+
+These are highly competitive, but worth targeting organically:
+
+best software development company Africa
+best software developers Africa
+best software company Africa
+best technology company Africa
+best software development company East Africa
+best software developers East Africa
+best software company East Africa
+best technology company East Africa
+best software development company Uganda
+best software development company Kenya
+best software development company Rwanda
+best software development company Tanzania
+best software development company Ethiopia
+best software development company South Sudan
+
+I would not make unsupported claims that Reverence is "the best." Instead, create useful comparison/educational content that can compete for these searches.
+
+33. Regional cost/pricing keywords
+
+These can bring extremely valuable commercial traffic.
+
+software development cost Africa
+software development cost East Africa
+software development cost Uganda
+software development cost Kenya
+software development cost Rwanda
+software development cost Tanzania
+software development cost Ethiopia
+mobile app development cost Africa
+mobile app development cost East Africa
+website development cost Africa
+website development cost East Africa
+ERP development cost Africa
+ecommerce development cost Africa
+custom software cost Africa
+software developer rates Africa
+software development rates Africa
+African software development pricing
+34. Country + industry combinations
+
+This is where the keyword universe becomes massive.
+
+For example:
+
+Kenya
+school management software Kenya
+ERP software Kenya
+POS software Kenya
+restaurant software Kenya
+hospital management software Kenya
+ecommerce development Kenya
+mobile app development Kenya
+NGO software Kenya
+CRM software Kenya
+HR software Kenya
+Rwanda
+school management software Rwanda
+ERP software Rwanda
+POS software Rwanda
+restaurant software Rwanda
+hospital management software Rwanda
+ecommerce development Rwanda
+mobile app development Rwanda
+NGO software Rwanda
+CRM software Rwanda
+HR software Rwanda
+Tanzania
+school management software Tanzania
+ERP software Tanzania
+POS software Tanzania
+restaurant software Tanzania
+hospital management software Tanzania
+ecommerce development Tanzania
+mobile app development Tanzania
+NGO software Tanzania
+CRM software Tanzania
+HR software Tanzania
+
+And replicate this pattern across:
+
+Uganda, Kenya, Rwanda, Tanzania, Burundi, South Sudan, DRC, Ethiopia, Eritrea, Somalia, Djibouti, Zambia, Zimbabwe, Malawi, Mozambique, South Africa, Ghana, Nigeria, Senegal, Côte d'Ivoire, Cameroon, Botswana and Namibia.
+
+35. City-level expansion
+
+For serious regional SEO, don't stop at country names.
+
+For example:
+
+Kenya
+
+Nairobi
+Mombasa
+Kisumu
+Nakuru
+Eldoret
+
+Tanzania
+
+Dar es Salaam
+Arusha
+Dodoma
+Mwanza
+Zanzibar
+
+Rwanda
+
+Kigali
+Huye
+Musanze
+
+Uganda
+
+Kampala
+Entebbe
+Jinja
+Mbarara
+Mbale
+Gulu
+Masaka
+Mukono
+
+Ethiopia
+
+Addis Ababa
+Dire Dawa
+Mekelle
+Hawassa
+
+DRC
+
+Kinshasa
+Lubumbashi
+Goma
+Kisangani
+
+South Sudan
+
+Juba
+Wau
+Malakal
+
+Zambia
+
+Lusaka
+Kitwe
+Ndola
+Livingstone
+
+Zimbabwe
+
+Harare
+Bulawayo
+36. Pan-African "Made in Africa" positioning
+
+These are excellent for brand authority:
+
+African software development company
+African technology solutions company
+African software engineering company
+African digital solutions company
+software built in Africa
+software development in Africa
+technology built in Africa
+African technology innovation
+African digital innovation
+African software solutions
+software for Africa
+technology for African businesses
+digital solutions for Africa
+software solutions for African businesses
+technology solutions for African businesses
+African business technology
+African enterprise software
+African SaaS company
+African software engineering
+African developers
+African tech talent
+African technology ecosystem
+37. Country-independent commercial keywords
+
+These are useful because they don't tie Reverence to one geography:
+
+custom software development company
+software development company
+software development agency
+software development services
+custom software developers
+enterprise software development
+business software development
+mobile app development company
+mobile app development services
+web development company
+web development services
+ecommerce development company
+SaaS development company
+ERP development company
+software integration company
+digital transformation company
+business automation company
+technology solutions company
+IT solutions company
+application development company
+software engineering company
+technology consulting company
+38. The strategic keyword structure I recommend
+
+Rather than trying to make Reverence Technology rank for 10,000 unrelated keywords, build a hierarchy:
+
+Level 1 — Brand
+
+Reverence Technology
+
+↓
+
+Level 2 — Geography
+
+Uganda → East Africa → Africa
+
+↓
+
+Level 3 — Core services
+
+Software Development
+Web Development
+Mobile App Development
+Business Automation
+ERP
+E-commerce
+System Integration
+Digital Transformation
+
+↓
+
+Level 4 — Industries
+
+Education
+Healthcare
+Retail
+Hospitality
+Finance
+NGOs
+Logistics
+Agriculture
+Real Estate
+Government
+
+↓
+
+Level 5 — Location
+
+For example:
+
+School Management Software → Rwanda
+
+Mobile App Development → Kenya
+
+ERP Development → Tanzania
+
+Business Automation → Uganda
+
+E-commerce Development → East Africa
+
+Custom Software → Africa
+
+That gives you a scalable SEO architecture instead of a random keyword collection.
+
+The regional positioning I would use
+
+I would gradually move the company's positioning from:
+
+Reverence Technology — Software Development Company in Uganda
+
+to something along the lines of:
+
+Reverence Technology — African Software Development & Digital Solutions Company
+
+while still maintaining strong Uganda/Kampala landing pages.
+
+That lets Google understand that Uganda is your home market, East Africa is your regional market, and Africa is your broader market.
+
+Most importantly, don't create hundreds of thin pages just by swapping country names. Each regional page should contain genuinely useful, localized content, relevant examples, industries, payment systems, regulations, business needs and case studies for that market. Otherwise, the pages can look like doorway pages rather than valuable regional resources.

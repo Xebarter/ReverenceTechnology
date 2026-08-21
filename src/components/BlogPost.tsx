@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar, Bookmark, Clock, ChevronRight, Linkedin, Twitter, MessageCircle } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import SEO from './SEO';
 import { supabase } from '../lib/supabase';
 import { buttonClassName, Container } from './ui';
 
@@ -70,8 +69,6 @@ export default function BlogPost() {
 
   return (
     <div className="bg-paper">
-      <SEO title={post.title} description={post.excerpt} ogType="article" />
-
       <motion.div className="fixed left-0 right-0 top-0 z-[100] h-0.5 origin-left bg-gold" style={{ scaleX }} />
 
       <nav className="border-b border-rule bg-paper">

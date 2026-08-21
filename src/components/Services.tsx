@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
@@ -108,6 +109,20 @@ export default function Services() {
             Request a service to open a project. We quote a total, then you pay in installments as we
             request them — or settle the remaining balance in full whenever you choose.
           </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.25 }}
+            className="mt-6"
+          >
+            <Link
+              href="/services"
+              className="text-sm font-medium text-ink underline decoration-gold underline-offset-4 hover:text-ink-deep"
+            >
+              Explore software, web, and app services
+            </Link>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

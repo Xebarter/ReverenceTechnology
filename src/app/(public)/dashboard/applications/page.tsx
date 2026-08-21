@@ -1,13 +1,5 @@
-"use client";
-
-import MyApplications from "../../../../components/MyApplications";
-import SEO from "../../../../components/SEO";
+import MyApplications from '../../../../components/MyApplications';
 
 export default function DashboardApplicationsPage() {
-  return (
-    <>
-      <SEO title="Applications" />
-      <MyApplications />
-    </>
-  );
+  return <MyApplications />;
 }

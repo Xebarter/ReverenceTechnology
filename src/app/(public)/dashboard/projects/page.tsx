@@ -1,13 +1,5 @@
-"use client";
-
-import MyProjectsList from "../../../../components/MyProjectsList";
-import SEO from "../../../../components/SEO";
+import MyProjectsList from '../../../../components/MyProjectsList';
 
 export default function DashboardProjectsPage() {
-  return (
-    <>
-      <SEO title="Projects" />
-      <MyProjectsList />
-    </>
-  );
+  return <MyProjectsList />;
 }

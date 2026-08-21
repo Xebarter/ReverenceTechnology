@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, Clock, Banknote, ArrowLeft, CheckCircle2, Briefcase, Info } from 'lucide-react';
-import SEO from './SEO';
 import JobApplicationForm from './JobApplicationForm';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../UserContext';
@@ -101,11 +100,6 @@ export default function JobDetails() {
 
   return (
     <div className="bg-paper pb-24">
-      <SEO
-        title={`${job.title} | Careers`}
-        description={`Join Reverence Technology as a ${job.title}.`}
-      />
-
       <PageHeader
         eyebrow="Careers"
         title={job.title}

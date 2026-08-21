@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Newsreader, Source_Sans_3, Nunito_Sans } from 'next/font/google';
 import '../index.css';
 import { Providers } from './providers';
+import { rootMetadata } from '../lib/seo';
 
 const newsreader = Newsreader({
   subsets: ['latin'],
@@ -22,10 +23,7 @@ const nunitoSans = Nunito_Sans({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: 'Reverence Technology',
-  description: 'Reverence Technology website',
-};
+export const metadata: Metadata = rootMetadata();
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -35,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${sourceSans.variable} ${nunitoSans.variable}`}>
+    <html lang="en-UG" className={`${newsreader.variable} ${sourceSans.variable} ${nunitoSans.variable}`}>
       <body className="font-sans bg-paper text-ink antialiased">
         <Providers>{children}</Providers>
       </body>

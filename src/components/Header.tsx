@@ -91,8 +91,12 @@ export default function Header() {
 
             <div className="hidden items-center gap-7 lg:flex">
               {['Home', 'Services', 'FAQ', 'Blog', 'Careers'].map((item) =>
-                item === 'Blog' || item === 'Careers' ? (
-                  <Link key={item} href={`/${item.toLowerCase()}`} className={navLinkClass}>
+                item === 'Blog' || item === 'Careers' || item === 'Services' ? (
+                  <Link
+                    key={item}
+                    href={item === 'Services' ? '/services' : `/${item.toLowerCase()}`}
+                    className={navLinkClass}
+                  >
                     {item}
                   </Link>
                 ) : (
@@ -169,6 +173,8 @@ export default function Header() {
                     onClick={() => {
                       if (item === 'Blog' || item === 'Careers') {
                         window.location.href = `/${item.toLowerCase()}`;
+                      } else if (item === 'Services') {
+                        window.location.href = '/services';
                       } else {
                         navigateToSection(item.toLowerCase());
                       }

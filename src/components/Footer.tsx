@@ -65,9 +65,9 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button onClick={() => navigateToSection('services')} className={footerLink}>
+                <a href="/services" className={footerLink}>
                   Services
-                </button>
+                </a>
               </li>
               <li>
                 <button onClick={() => navigateToSection('faq')} className={footerLink}>
@@ -102,19 +102,35 @@ const Footer = () => {
               Services
             </h4>
             <ul className="space-y-3">
-              {['Web Development', 'Mobile Apps', 'Cloud Solutions', 'UI/UX Design', 'Consulting'].map(
-                (label) => (
-                  <li key={label}>
-                    <button onClick={() => navigateToSection('services')} className={footerLink}>
-                      {label}
-                    </button>
-                  </li>
-                )
-              )}
               <li>
-                <button onClick={() => navigateToSection('projects')} className={footerLink}>
-                  Our Projects
-                </button>
+                <a href="/services" className={footerLink}>
+                  All services
+                </a>
+              </li>
+              <li>
+                <a href="/services/web-development-uganda" className={footerLink}>
+                  Web development
+                </a>
+              </li>
+              <li>
+                <a href="/services/mobile-app-development-uganda" className={footerLink}>
+                  Mobile apps
+                </a>
+              </li>
+              <li>
+                <a href="/services/software-development-uganda" className={footerLink}>
+                  Custom software
+                </a>
+              </li>
+              <li>
+                <a href="/services/business-automation-uganda" className={footerLink}>
+                  Business automation
+                </a>
+              </li>
+              <li>
+                <a href="/projects" className={footerLink}>
+                  Our projects
+                </a>
               </li>
             </ul>
           </div>

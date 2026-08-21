@@ -14,7 +14,6 @@ import {
   X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import SEO from './SEO';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { Button, Card, Container, Input, PageHeader, Select } from './ui';
@@ -119,8 +118,6 @@ export default function Careers() {
 
   return (
     <div className="bg-paper">
-      <SEO title="Careers | Join Reverence Technology" />
-
       <PageHeader
         eyebrow="Careers"
         title="Build products that matter."

@@ -1,13 +1,8 @@
-"use client";
-
 import Checkout from '../../../components/Checkout';
-import SEO from '../../../components/SEO';
+import { noIndexMetadata } from '../../../lib/seo';
+
+export const metadata = noIndexMetadata('Checkout', '/checkout');
 
 export default function CheckoutPage() {
-  return (
-    <>
-      <SEO title="Checkout" />
-      <Checkout />
-    </>
-  );
+  return <Checkout />;
 }

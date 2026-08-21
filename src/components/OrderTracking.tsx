@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Search, Package, Calendar, Truck, CheckCircle2, Clock, XCircle, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';

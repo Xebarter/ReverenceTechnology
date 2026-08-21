@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePassword } from "firebase/auth";
-import SEO from "../../../components/SEO";
 import { useUser } from "../../../UserContext";
 import { firebaseAuth } from "../../../lib/firebase";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -60,7 +59,6 @@ export default function SetPasswordPage() {
 
   return (
     <>
-      <SEO title="Set Password" />
       <PageHeader
         eyebrow="Secure your account"
         title="Set your password"

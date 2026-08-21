@@ -1,13 +1,5 @@
-"use client";
-
-import UserDashboard from "../../../components/UserDashboard";
-import SEO from "../../../components/SEO";
+import UserDashboard from '../../../components/UserDashboard';
 
 export default function DashboardPage() {
-  return (
-    <>
-      <SEO title="Dashboard" />
-      <UserDashboard />
-    </>
-  );
+  return <UserDashboard />;
 }

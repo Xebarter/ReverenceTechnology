@@ -1,13 +1,12 @@
-"use client";
-
 import RefundPolicy from '../../../components/RefundPolicy';
-import SEO from '../../../components/SEO';
+import { pageMetadata } from '../../../lib/seo';
+
+export const metadata = pageMetadata({
+  title: 'Refund Policy',
+  description: 'Refund and cancellation terms for Reverence Technology projects, products, and payments.',
+  path: '/refund-policy',
+});
 
 export default function RefundPolicyPage() {
-  return (
-    <>
-      <SEO title="Refund Policy" />
-      <RefundPolicy />
-    </>
-  );
+  return <RefundPolicy />;
 }

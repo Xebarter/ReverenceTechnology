@@ -1,13 +1,8 @@
-"use client";
-
 import DepositTracking from '../../../components/DepositTracking';
-import SEO from '../../../components/SEO';
+import { noIndexMetadata } from '../../../lib/seo';
+
+export const metadata = noIndexMetadata('Deposits', '/deposits');
 
 export default function DepositsPage() {
-  return (
-    <>
-      <SEO title="Deposits" />
-      <DepositTracking />
-    </>
-  );
+  return <DepositTracking />;
 }
