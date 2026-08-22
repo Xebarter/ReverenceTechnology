@@ -78,13 +78,13 @@ const Projects: React.FC = () => {
       <Container>
         <div className="mx-auto mb-16 max-w-2xl text-center">
           <p className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
-            Our Portfolio
+            Recent results
           </p>
           <h2 className="font-serif text-4xl font-medium tracking-tight text-ink-deep md:text-5xl">
-            Work that speaks for itself
+            Shipped. Live. In use.
           </h2>
           <p className="mt-5 text-lg text-muted">
-            A curated selection of projects where technical excellence meets real business impact.
+            Three recent builds. Open one if you want to see how we work before you buy.
           </p>
         </div>
 
@@ -151,7 +151,7 @@ const Projects: React.FC = () => {
                       )}
                     </div>
                     <span className="inline-flex items-center gap-2 text-sm font-medium text-ink">
-                      View Details <ArrowRight className="h-3.5 w-3.5" />
+                      See how we built this <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
                 </article>
@@ -167,17 +167,17 @@ const Projects: React.FC = () => {
         )}
 
         <div className="mt-20 border border-rule bg-ink-deep px-8 py-12 text-center text-paper">
-          <h3 className="font-serif text-2xl md:text-3xl">Have a project in mind?</h3>
-          <p className="mt-2 mb-8 text-paper/70">Let&apos;s build something exceptional together.</p>
+          <h3 className="font-serif text-2xl md:text-3xl">Need one of these for your business?</h3>
+          <p className="mt-2 mb-8 text-paper/70">Pick a package. We send a total and a start date.</p>
           <Button
             variant="secondary"
             className="border-paper/30 text-paper hover:bg-paper hover:text-ink-deep"
             onClick={() => {
-              const el = document.getElementById('contact');
-              el ? el.scrollIntoView({ behavior: 'smooth' }) : (window.location.hash = 'contact');
+              const el = document.getElementById('services');
+              el ? el.scrollIntoView({ behavior: 'smooth' }) : (window.location.hash = 'services');
             }}
           >
-            Start a Conversation
+            Start a project
           </Button>
         </div>
       </Container>

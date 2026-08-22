@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, Clock, ShieldCheck, Award, Lock, Zap } from 'lucide-react';
+import { Mail, Phone, Send, CheckCircle2, Clock, ShieldCheck, MapPin, FileCheck, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, Inquiry } from '../lib/supabase';
 import { Button, Container, FieldLabel, Input, Select, Textarea } from './ui';
@@ -83,21 +83,21 @@ export default function Contact() {
               viewport={{ once: true }}
             >
               <p className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
-                Get in touch
+                Start
               </p>
               <h2 className="mb-6 font-serif text-4xl font-medium tracking-tight text-ink-deep sm:text-5xl">
-                Let’s build your <br />
-                digital future.
+                Tell us what you need. We’ll reply with a total and a start date.
               </h2>
               <p className="mb-10 text-lg leading-relaxed text-muted">
-                Based in Kampala, serving the world. We combine local expertise with global tech standards.
+                Kampala. One business day. Phone if you want an answer faster than email.
               </p>
 
               <div className="mb-12 space-y-3">
                 {[
-                  { icon: MapPin, title: "Our Headquarters", detail: "Mutungo, Zone 1, Kampala, Uganda" },
-                  { icon: Phone, title: "Direct Line", detail: "+256 783 676 313" },
-                  { icon: Mail, title: "Email Support", detail: "reverencetech1@gmail.com" }
+                  { icon: Clock, title: "Response time", detail: "Within one business day" },
+                  { icon: Phone, title: "Call", detail: "+256 783 676 313" },
+                  { icon: Mail, title: "Write", detail: "reverencetech1@gmail.com" },
+                  { icon: MapPin, title: "Studio", detail: "Mutungo, Zone 1, Kampala, Uganda" },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center rounded-md border border-rule bg-surface p-4">
                     <div className="mr-4 text-gold">
@@ -118,7 +118,7 @@ export default function Contact() {
                     <Clock size={18} />
                     <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em]">Availability</span>
                   </div>
-                  <h4 className="mb-4 font-serif text-xl font-medium">We're here when you need us.</h4>
+                  <h4 className="mb-4 font-serif text-xl font-medium">Desk hours</h4>
                   <div className="mb-6 grid grid-cols-2 gap-4 text-sm text-paper/70">
                     <div>
                       <p className="font-medium text-paper">Mon — Fri</p>
@@ -130,18 +130,18 @@ export default function Contact() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 border-t border-paper/15 pt-6">
-                    <div className="text-center">
-                      <Lock className="mx-auto mb-2 text-gold" size={20} />
-                      <p className="text-xs font-medium text-paper/70">Secure</p>
+                  <div className="grid grid-cols-1 gap-4 border-t border-paper/15 pt-6 sm:grid-cols-3">
+                    <div>
+                      <MessageSquare className="mb-2 text-gold" size={18} />
+                      <p className="text-xs font-medium leading-relaxed text-paper/80">Reply in one business day</p>
                     </div>
-                    <div className="text-center">
-                      <Zap className="mx-auto mb-2 text-gold" size={20} />
-                      <p className="text-xs font-medium text-paper/70">Fast Response</p>
+                    <div>
+                      <ShieldCheck className="mb-2 text-gold" size={18} />
+                      <p className="text-xs font-medium leading-relaxed text-paper/80">No work until you accept the total</p>
                     </div>
-                    <div className="text-center">
-                      <Award className="mx-auto mb-2 text-gold" size={20} />
-                      <p className="text-xs font-medium text-paper/70">Trusted</p>
+                    <div>
+                      <FileCheck className="mb-2 text-gold" size={18} />
+                      <p className="text-xs font-medium leading-relaxed text-paper/80">You own the code</p>
                     </div>
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export default function Contact() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="mb-8 flex items-center gap-3">
                       <div className="h-8 w-px bg-gold" />
-                      <h3 className="font-serif text-2xl font-medium text-ink-deep">Project Inquiry</h3>
+                      <h3 className="font-serif text-2xl font-medium text-ink-deep">Get a total</h3>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -269,7 +269,7 @@ export default function Contact() {
                         value={formData.message}
                         onChange={handleChange}
                         rows={4}
-                        placeholder="Tell us about your goals..."
+                        placeholder="What should we build, and when do you need it?"
                         className="resize-none"
                       />
                     </div>
@@ -286,7 +286,7 @@ export default function Contact() {
                       size="lg"
                       className="w-full"
                     >
-                      {submitting ? "Processing..." : "Send Message"}
+                      {submitting ? "Sending…" : "Request a quote"}
                       <Send size={18} />
                     </Button>
 

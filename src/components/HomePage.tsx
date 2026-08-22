@@ -17,12 +17,12 @@ export default function HomePage() {
     <>
       <Hero />
       <Projects />
-      <About />
       <Services />
+      <About />
       <Testimonials onShowTestimonialForm={() => setIsTestimonialFormOpen(true)} />
       <SubmitTestimonial isOpen={isTestimonialFormOpen} onClose={() => setIsTestimonialFormOpen(false)} />
-      <Contact />
       <FAQ />
+      <Contact />
     </>
   );
 }

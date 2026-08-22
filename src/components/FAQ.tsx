@@ -11,48 +11,53 @@ import { Button, Container, FieldLabel, Input } from './ui';
 
 const faqs = [
   {
-    category: 'Process & Partnership',
+    category: 'Starting',
     icon: Zap,
     items: [
       {
-        question: 'How quickly can you kick off a new project?',
-        answer: 'Discovery typically starts within 3 business days of signing. Once aligned, we assemble your dedicated engineering squad and launch the first sprint within 10 business days.'
+        question: 'How fast do you start?',
+        answer:
+          'We reply within one business day with a total and a start date. Most projects begin the same week you accept the quote.',
       },
       {
-        question: 'What does collaboration look like?',
-        answer: 'We operate in 2-week sprints. You receive weekly demos, transparent progress reports via our Project Hub, and direct Slack/Discord access to your lead architect.'
-      }
-    ]
-  },
-  {
-    category: 'Technology & Security',
-    icon: Code2,
-    items: [
-      {
-        question: 'Can you integrate with legacy systems?',
-        answer: 'Yes. We specialize in building secure bridge layers (APIs) for ERPs like SAP and Oracle, ensuring your modern frontend works seamlessly with established backends.'
+        question: 'What does a quote include?',
+        answer:
+          'One number for the agreed scope: design, build, and launch. Extra work is priced before we start it. No open-ended retainer unless you ask for one.',
       },
-      {
-        question: 'How do you ensure data security?',
-        answer: 'Our workflow includes automated dependency scanning, peer-reviewed pull requests, and SOC 2 aligned infrastructure hardening on AWS/Azure/GCP.'
-      }
-    ]
+    ],
   },
   {
-    category: 'Legal & Ownership',
+    category: 'Money',
     icon: Scale,
     items: [
       {
-        question: 'Who owns the final source code?',
-        answer: 'You do. We provide a full IP transfer upon project completion. You own 100% of the code, assets, and documentation we produce.'
-      }
-    ]
-  }
+        question: 'How do installments work?',
+        answer:
+          'We set an agreed total. You pay when we request an installment, or settle the remaining balance in full at any time from your project page.',
+      },
+      {
+        question: 'Can I pay with MTN, Airtel, or a card?',
+        answer:
+          'Yes. Mobile money is collected by Paytota (PIN prompt on your phone). Cards go through DPO. Use the number and method on checkout or on your project.',
+      },
+    ],
+  },
+  {
+    category: 'Ownership',
+    icon: Code2,
+    items: [
+      {
+        question: 'Who owns the code?',
+        answer:
+          'You do. When the project is complete, the source, assets, and documentation transfer to you. We do not keep a license on your product.',
+      },
+    ],
+  },
 ];
 
 const quickFacts = [
-  { icon: ShieldCheck, title: 'Compliance', desc: 'ISO-aligned workflows.' },
-  { icon: Clock, title: 'Support', desc: '24/7 reliability monitoring.' }
+  { icon: Clock, title: 'Reply', desc: 'One business day.' },
+  { icon: ShieldCheck, title: 'Payments', desc: 'Mobile money or card.' },
 ];
 
 export default function FAQ() {
@@ -311,13 +316,13 @@ export default function FAQ() {
         <div className="lg:col-span-5 space-y-10">
           <div>
             <p className="mb-6 inline-flex items-center gap-2 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
-              <HelpCircle size={13} /> Knowledge Base
+              <HelpCircle size={13} /> Questions
             </p>
             <h2 className="mb-6 font-serif text-4xl font-medium leading-[1.1] tracking-tight text-ink-deep md:text-6xl">
-              Everything you need to know.
+              The questions that decide the buy.
             </h2>
             <p className="max-w-md text-lg text-muted">
-              Answers to the technical and business questions teams ask before building with Reverence.
+              Timeline, money, and who owns what. If it is not here, book a call.
             </p>
           </div>
 
@@ -368,8 +373,8 @@ export default function FAQ() {
             ) : (
               <>
                 <MessageCircle className="absolute -bottom-8 -right-8 text-paper/5" size={160} />
-                <h3 className="mb-2 font-serif text-2xl font-medium">Still curious?</h3>
-                <p className="mb-6 text-sm text-paper/70">Book a 15-minute technical audit with our team.</p>
+                <h3 className="mb-2 font-serif text-2xl font-medium">Want a number?</h3>
+                <p className="mb-6 text-sm text-paper/70">Fifteen minutes. We tell you if we can do it and what it costs.</p>
                 <Button
                   onClick={() => setShowCallForm(true)}
                   className="w-full border-paper bg-paper text-ink-deep hover:bg-surface"

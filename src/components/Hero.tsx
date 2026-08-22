@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Star, ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, BadgeCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Button, Container } from './ui';
@@ -49,94 +49,54 @@ type Testimonial = {
   id: string;
   name: string;
   content: string;
-  rating: number;
-  avatar_url?: string | null;
-  role?: string | null;
   company?: string | null;
-  created_at?: string;
 };
 
 export default function Hero() {
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-  const testimonialsRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const fetchHeroImages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('hero_images')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      const cleaned = (data as HeroImage[] | null | undefined)?.filter((d) => d.image_url?.trim()) ?? [];
-      if (cleaned.length) {
-        setHeroImages(cleaned);
-        return;
-      }
-
-      setHeroImages([
-        {
-          id: 'fallback',
-          image_url: FALLBACK_IMAGE,
-          title: 'Default',
-        },
-      ]);
-    } catch {
-      setHeroImages([
-        {
-          id: 'fallback',
-          image_url: FALLBACK_IMAGE,
-          title: 'Default',
-        },
-      ]);
-    }
-  };
-
-  const fetchTestimonials = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setTestimonials(data || []);
-    } catch {
-      setTestimonials([]);
-    }
-  };
-
-  const startTestimonialCarousel = () => {
-    stopTestimonialCarousel();
-    intervalRef.current = setInterval(() => {
-      setCurrentTestimonialIndex((prev) => (prev + 1) % testimonials.length);
-    }, 7000);
-  };
-
-  const stopTestimonialCarousel = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-
-  const handleTestimonialNavigate = (direction: number) => {
-    stopTestimonialCarousel();
-    if (direction === 1) {
-      setCurrentTestimonialIndex((prev) => (prev + 1) % testimonials.length);
-    } else {
-      setCurrentTestimonialIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
-    }
-    startTestimonialCarousel();
-  };
+  const [quote, setQuote] = useState<Testimonial | null>(null);
 
   useEffect(() => {
-    fetchHeroImages();
-    fetchTestimonials();
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('hero_images')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        const cleaned = (data as HeroImage[] | null | undefined)?.filter((d) => d.image_url?.trim()) ?? [];
+        if (cleaned.length) {
+          setHeroImages(cleaned);
+          return;
+        }
+        setHeroImages([{ id: 'fallback', image_url: FALLBACK_IMAGE, title: 'Default' }]);
+      } catch {
+        setHeroImages([{ id: 'fallback', image_url: FALLBACK_IMAGE, title: 'Default' }]);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    const loadQuote = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('id,name,content,company')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) setQuote(data as Testimonial);
+      } catch {
+        setQuote(null);
+      }
+    };
+    loadQuote();
   }, []);
 
   useEffect(() => {
@@ -148,27 +108,14 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
-  useEffect(() => {
-    if (testimonials.length > 1) startTestimonialCarousel();
-    return () => stopTestimonialCarousel();
-  }, [testimonials]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting, {
-      threshold: 0.15,
-    });
-    if (testimonialsRef.current) observer.observe(testimonialsRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const stats = [
-    { value: '5+', label: 'Years Experience' },
-    { value: '75+', label: 'Happy Clients' },
-    { value: '50+', label: 'Projects Delivered' },
+    { value: '5+', label: 'Years in market' },
+    { value: '75+', label: 'Clients served' },
+    { value: '50+', label: 'Products shipped' },
   ];
 
   return (
@@ -182,7 +129,7 @@ export default function Hero() {
               transition={{ duration: 0.4 }}
               className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold"
             >
-              Kampala, Uganda · Serving East Africa
+              Kampala studio · East Africa delivery
             </motion.p>
 
             <motion.div
@@ -191,11 +138,11 @@ export default function Hero() {
               transition={{ duration: 0.5, delay: 0.08 }}
             >
               <h1 className="font-serif text-[2rem] font-medium leading-[1.15] tracking-tight text-ink-deep sm:text-5xl xl:text-6xl">
-                Build your digital future with Uganda&apos;s leading tech partner
+                Software, sites, and apps that take payment and get used
               </h1>
               <p className="mt-4 max-w-xl text-base leading-relaxed text-muted sm:mt-5 sm:text-lg">
-                We craft high-performance websites, mobile apps, and custom software that help
-                businesses across East Africa grow faster and compete smarter.
+                We build the product, quote a total, and collect MTN, Airtel, or card as work lands.
+                You own the code.
               </p>
             </motion.div>
 
@@ -203,32 +150,19 @@ export default function Hero() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.16 }}
-              className="flex flex-wrap gap-x-8 gap-y-4 border-y border-rule py-5"
-            >
-              {stats.map(({ value, label }) => (
-                <div key={label}>
-                  <div className="font-serif text-2xl text-ink-deep">{value}</div>
-                  <div className="mt-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                    {label}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.22 }}
-              className="flex flex-col gap-3 pt-2 sm:flex-row"
+              className="flex flex-col gap-3 pt-1 sm:flex-row"
             >
               <Button size="lg" onClick={() => scrollToSection('services')}>
-                Get a Free Quote
+                Start a project
                 <ArrowRight size={16} />
               </Button>
-              <Button size="lg" variant="secondary" onClick={() => scrollToSection('contact')}>
-                Talk to Us
+              <Button size="lg" variant="ghost" onClick={() => scrollToSection('projects')}>
+                See the work
               </Button>
             </motion.div>
+            <p className="text-sm text-muted">
+              Quote first. Pay as we request work. You own what we ship.
+            </p>
           </div>
 
           <motion.div
@@ -275,10 +209,10 @@ export default function Hero() {
               <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between gap-2 border-t border-rule bg-surface/95 px-3 py-2.5 sm:px-4 sm:py-3">
                 <span className="flex min-w-0 items-center gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-ink sm:text-[0.6875rem]">
                   <BadgeCheck size={14} className="flex-shrink-0 text-gold" />
-                  <span className="truncate">Verified Partner</span>
+                  <span className="truncate">Kampala studio</span>
                 </span>
                 <span className="flex-shrink-0 text-[0.625rem] uppercase tracking-[0.14em] text-muted sm:text-[0.6875rem]">
-                  Kampala
+                  East Africa
                 </span>
               </div>
             </div>
@@ -301,112 +235,28 @@ export default function Hero() {
         </div>
       </Container>
 
-      <div className="relative z-10 border-t border-rule bg-surface" ref={testimonialsRef}>
-        {testimonials.length > 0 && (
-          <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-            <p className="mb-8 text-center text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
-              What our clients say
-            </p>
-            <div className="relative">
-              <div className="relative min-h-[8.5rem] sm:h-[140px] sm:min-h-0">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentTestimonialIndex}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 flex items-center"
-                  >
-                    <div className="flex w-full items-start gap-3 sm:gap-5">
-                      <img
-                        src={
-                          testimonials[currentTestimonialIndex].avatar_url ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            testimonials[currentTestimonialIndex].name
-                          )}&background=1C3D5A&color=fff&size=96`
-                        }
-                        className="h-10 w-10 flex-shrink-0 object-cover sm:h-12 sm:w-12"
-                        alt={testimonials[currentTestimonialIndex].name}
-                        width={48}
-                        height={48}
-                        decoding="async"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-2 flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={12}
-                              className={
-                                i < testimonials[currentTestimonialIndex].rating
-                                  ? 'fill-gold text-gold'
-                                  : 'fill-rule text-rule'
-                              }
-                            />
-                          ))}
-                        </div>
-                        <p className="mb-3 line-clamp-3 font-serif text-base italic leading-relaxed text-ink-deep sm:line-clamp-2 sm:text-lg">
-                          &ldquo;{testimonials[currentTestimonialIndex].content}&rdquo;
-                        </p>
-                        <div className="flex items-center gap-2 text-sm">
-                          <p className="font-medium text-ink">{testimonials[currentTestimonialIndex].name}</p>
-                          {(testimonials[currentTestimonialIndex].role ||
-                            testimonials[currentTestimonialIndex].company) && (
-                            <>
-                              <span className="text-rule">·</span>
-                              <p className="truncate text-muted">
-                                {testimonials[currentTestimonialIndex].role}
-                                {testimonials[currentTestimonialIndex].role &&
-                                  testimonials[currentTestimonialIndex].company &&
-                                  ', '}
-                                {testimonials[currentTestimonialIndex].company}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex gap-1.5">
-                  {testimonials.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        stopTestimonialCarousel();
-                        setCurrentTestimonialIndex(index);
-                        startTestimonialCarousel();
-                      }}
-                      className={`h-px transition-all duration-300 ${
-                        index === currentTestimonialIndex ? 'w-8 bg-ink' : 'w-4 bg-rule'
-                      }`}
-                      aria-label={`Testimonial ${index + 1}`}
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleTestimonialNavigate(-1)}
-                    className="border border-rule p-2 text-ink hover:bg-paper-2"
-                    aria-label="Previous"
-                  >
-                    <ChevronLeft size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleTestimonialNavigate(1)}
-                    className="border border-rule p-2 text-ink hover:bg-paper-2"
-                    aria-label="Next"
-                  >
-                    <ChevronRight size={15} />
-                  </button>
+      <div className="relative z-10 border-t border-rule bg-surface">
+        <Container className="py-6 sm:py-8">
+          <div className="grid grid-cols-3 gap-4 border-b border-rule pb-6 sm:gap-8 sm:pb-8">
+            {stats.map(({ value, label }) => (
+              <div key={label}>
+                <div className="font-serif text-2xl text-ink-deep sm:text-3xl">{value}</div>
+                <div className="mt-1 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted sm:text-[0.6875rem]">
+                  {label}
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        )}
+          {quote && (
+            <p className="mt-6 max-w-3xl font-serif text-base italic leading-relaxed text-ink-deep sm:text-lg">
+              “{quote.content}”
+              <span className="mt-2 block font-sans text-sm not-italic text-muted">
+                {quote.name}
+                {quote.company ? ` · ${quote.company}` : ''}
+              </span>
+            </p>
+          )}
+        </Container>
       </div>
     </section>
   );
