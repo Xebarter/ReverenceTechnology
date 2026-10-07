@@ -6,9 +6,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-sans)', 'Source Sans 3', 'sans-serif'],
-        serif: ['var(--font-serif)', 'Newsreader', 'serif'],
-        admin: ['var(--font-admin)', 'Nunito Sans', 'sans-serif'],
+        sans: ['var(--font-sans)', 'sans-serif'],
+        serif: ['var(--font-serif)', 'sans-serif'],
+        admin: ['var(--font-admin)', 'sans-serif'],
       },
       colors: {
         paper: '#F4F1EA',

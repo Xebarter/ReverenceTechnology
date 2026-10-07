@@ -8,6 +8,7 @@ import { authJson } from '../lib/authFetch';
 import { useUser } from '../UserContext';
 import { Button, Card, FieldLabel, Input, Textarea } from './ui';
 import { AccountPageHeader } from './account';
+import { getServicePage } from '../lib/seoPages';
 import type { ClientProject } from '../lib/types';
 
 type ServiceRow = {
@@ -22,6 +23,8 @@ export default function CreateClientProject() {
   const searchParams = useSearchParams();
   const { user, loading } = useUser();
   const serviceId = searchParams?.get('service') || '';
+  const focusSlug = searchParams?.get('focus') || '';
+  const focusPage = getServicePage(focusSlug);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -45,6 +48,12 @@ export default function CreateClientProject() {
       }
     })();
   }, [serviceId]);
+
+  useEffect(() => {
+    if (serviceId || !focusPage) return;
+    setTitle((prev) => prev || focusPage.title);
+    setDescription((prev) => prev || focusPage.intro);
+  }, [serviceId, focusPage]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +104,13 @@ export default function CreateClientProject() {
               <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">Service</div>
               <div className="mt-1 font-medium text-ink-deep">{service.package_name}</div>
               <div className="mt-1 text-muted">{service.suggested_pricing}</div>
+            </div>
+          )}
+          {!service && focusPage && (
+            <div className="mb-6 rounded-md border border-rule bg-paper p-4 text-sm">
+              <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">Service</div>
+              <div className="mt-1 font-medium text-ink-deep">{focusPage.eyebrow}</div>
+              <div className="mt-1 text-muted">{focusPage.description}</div>
             </div>
           )}
 

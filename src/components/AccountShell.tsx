@@ -43,11 +43,11 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, loading, signOut } = useUser();
 
-  const redirectTo = authPageHref(pathname);
-
   useEffect(() => {
-    if (!loading && !user) router.replace(redirectTo);
-  }, [loading, user, router, redirectTo]);
+    if (loading || user) return;
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    router.replace(authPageHref(`${pathname || '/dashboard'}${search}`));
+  }, [loading, user, router, pathname]);
 
   useEffect(() => {
     setOpen(false);

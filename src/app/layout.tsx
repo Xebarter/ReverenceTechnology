@@ -1,27 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Newsreader, Source_Sans_3, Nunito_Sans } from 'next/font/google';
+import '@fontsource-variable/google-sans/wght.css';
+import '@fontsource-variable/google-sans/wght-italic.css';
 import '../index.css';
 import { Providers } from './providers';
 import { rootMetadata } from '../lib/seo';
-
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  display: 'swap',
-  style: ['normal', 'italic'],
-});
-
-const sourceSans = Source_Sans_3({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const nunitoSans = Nunito_Sans({
-  subsets: ['latin'],
-  variable: '--font-admin',
-  display: 'swap',
-});
 
 export const metadata: Metadata = rootMetadata();
 
@@ -33,7 +15,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-UG" className={`${newsreader.variable} ${sourceSans.variable} ${nunitoSans.variable}`}>
+    <html lang="en-UG">
       <body className="font-sans bg-paper text-ink antialiased">
         <Providers>{children}</Providers>
       </body>

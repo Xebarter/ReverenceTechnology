@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { AuthError, authErrorResponse, requireFirebaseUser } from '../../../../../server/requireAuth';
-import { eq, pgInsertRow, pgSelect } from '../../../../../server/supabasePostgrest';
+import { eq, pgInsertRow, pgPatch, pgSelect } from '../../../../../server/supabasePostgrest';
 import { requireSupabaseService } from '../../../../../server/supabaseEnv';
 import { hostedCheckoutConfigured } from '../../../../../server/hostedCheckoutGateway';
 import { attachHostedCheckoutToInstallment } from '../../../../../server/orderHostedCheckout';
 import { paytotaConfigured, publicPaymentError, requireUgMobile } from '../../../../../server/paytotaGateway';
 import { attachPaytotaToInstallment } from '../../../../../server/orderPaytota';
-import { mapClientProject, remainingBalance } from '../../../../../server/clientProjects';
+import { formatUgx } from '../../../../../lib/projectMoney';
+import {
+  depositCeiling,
+  isReplaceableCheckout,
+  minimumDeposit,
+} from '../../../../../lib/projectProgress';
+import { mapClientProject, mapInstallment, remainingBalance } from '../../../../../server/clientProjects';
 
 export const runtime = 'nodejs';
 
@@ -24,7 +30,8 @@ export async function POST(req: Request, context: RouteContext) {
     const id = await projectId(context);
     const body = (await req.json().catch(() => null)) as {
       installmentId?: string;
-      kind?: 'balance' | 'installment';
+      kind?: 'balance' | 'deposit' | 'installment';
+      amount?: number;
       method?: 'card' | 'mobile_money';
       phone?: string;
     } | null;
@@ -44,6 +51,7 @@ export async function POST(req: Request, context: RouteContext) {
     let installmentId = body?.installmentId?.trim() || '';
     let amount = 0;
     let kind: 'installment' | 'balance' = 'installment';
+    let chargeLabel: 'Balance' | 'Deposit' | 'Installment' = 'Installment';
 
     if (installmentId) {
       const { rows: instRows } = await pgSelect(
@@ -65,7 +73,9 @@ export async function POST(req: Request, context: RouteContext) {
       }
       amount = Number(inst.amount);
       kind = String(inst.kind) === 'balance' ? 'balance' : 'installment';
-    } else if (body?.kind === 'balance') {
+      const instNote = inst.note != null ? String(inst.note) : '';
+      chargeLabel = kind === 'balance' ? 'Balance' : instNote === 'Deposit' ? 'Deposit' : 'Installment';
+    } else if (body?.kind === 'balance' || body?.kind === 'deposit') {
       const remaining = remainingBalance(project);
       if (remaining == null) {
         return NextResponse.json({ error: 'The project total has not been set yet' }, { status: 409 });
@@ -73,15 +83,61 @@ export async function POST(req: Request, context: RouteContext) {
       if (remaining <= 0) {
         return NextResponse.json({ error: 'This project is already paid in full' }, { status: 409 });
       }
-      amount = remaining;
-      kind = 'balance';
+
+      const { rows: openRows, error: openError } = await pgSelect(
+        url,
+        serviceKey,
+        'payment_installments',
+        `${eq('client_project_id', id)}&status=eq.requested`,
+        '*',
+      );
+      if (openError) return NextResponse.json({ error: openError }, { status: 400 });
+
+      const open = openRows.map(mapInstallment);
+      const available = depositCeiling(remaining, open);
+      if (available <= 0) {
+        return NextResponse.json(
+          { error: 'A payment is already open for the remaining balance. Complete that payment first.' },
+          { status: 409 },
+        );
+      }
+
+      const requestedAmount = body.kind === 'deposit' ? Math.round(Number(body.amount)) : available;
+      const min = minimumDeposit(available);
+      if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+        return NextResponse.json({ error: 'Enter a valid deposit amount' }, { status: 400 });
+      }
+      if (requestedAmount > available) {
+        return NextResponse.json(
+          { error: `You can deposit up to ${formatUgx(available)} right now` },
+          { status: 409 },
+        );
+      }
+      if (requestedAmount < min) {
+        return NextResponse.json({ error: `Minimum deposit is ${formatUgx(min)}` }, { status: 400 });
+      }
+
+      amount = requestedAmount;
+      const coversProject = amount >= remaining - 0.5;
+      kind = coversProject ? 'balance' : 'installment';
+      chargeLabel = coversProject ? 'Balance' : 'Deposit';
+      const note = coversProject ? 'Pay remaining balance' : 'Deposit';
+
+      for (const item of open) {
+        if (!isReplaceableCheckout(item)) continue;
+        const cancelled = await pgPatch(url, serviceKey, 'payment_installments', eq('id', item.id), {
+          status: 'cancelled',
+        });
+        if (cancelled.error) return NextResponse.json({ error: cancelled.error }, { status: 400 });
+      }
+
       const { row: created, error: insertError } = await pgInsertRow(url, serviceKey, 'payment_installments', {
         client_project_id: id,
         amount,
         kind,
         status: 'requested',
         status_token: randomUUID(),
-        note: 'Pay remaining balance',
+        note,
       });
       if (insertError || !created) {
         return NextResponse.json({ error: insertError || 'Could not start payment' }, { status: 400 });
@@ -105,7 +161,7 @@ export async function POST(req: Request, context: RouteContext) {
         companyRef: `INST-${installmentId.slice(0, 8)}`,
         customerName: project.customer_name || user.name || user.email || 'Customer',
         customerEmail: project.customer_email || user.email || '',
-        serviceDescription: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
+        serviceDescription: `${chargeLabel} · ${project.title}`.slice(0, 120),
       });
       return NextResponse.json({ hostedCheckoutUrl, installmentId });
     }
@@ -133,7 +189,7 @@ export async function POST(req: Request, context: RouteContext) {
       customerName: project.customer_name || user.name || user.email || 'Customer',
       customerEmail: project.customer_email || user.email || '',
       customerPhone: phone,
-      productName: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
+      productName: `${chargeLabel} · ${project.title}`.slice(0, 120),
     });
 
     return NextResponse.json({

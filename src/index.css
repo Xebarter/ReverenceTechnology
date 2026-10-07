@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  --font-sans: "Google Sans Variable", sans-serif;
+  --font-serif: "Google Sans Variable", sans-serif;
+  --font-admin: "Google Sans Variable", sans-serif;
   --paper: #f4f1ea;
   --paper-2: #ebe6dc;
   --surface: #fffcf7;

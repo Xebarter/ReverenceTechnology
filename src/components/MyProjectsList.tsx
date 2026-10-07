@@ -1,14 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Info, Loader2, Plus } from 'lucide-react';
+import { ArrowUpRight, FolderOpen, Info, Loader2, Plus, Wallet } from 'lucide-react';
 import { authJson } from '../lib/authFetch';
 import { useUser } from '../UserContext';
 import { formatUgx, remainingBalance } from '../lib/projectMoney';
-import type { ClientProject } from '../lib/types';
+import { paymentPercent, stageIndex, PROJECT_STAGES } from '../lib/projectProgress';
+import type { ClientProject, ClientProjectStatus } from '../lib/types';
 import { Button, Card } from './ui';
 import { AccountPageHeader, StatusBadge } from './account';
+import { PaymentMeter } from './project/ProjectProgress';
+
+type FilterId = 'all' | 'active' | 'due' | 'done';
+
+const FILTERS: { id: FilterId; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'active', label: 'In progress' },
+  { id: 'due', label: 'Needs payment' },
+  { id: 'done', label: 'Complete' },
+];
+
+function matchesFilter(project: ClientProject, filter: FilterId) {
+  const remaining = remainingBalance(project);
+  if (filter === 'active') return project.status !== 'completed' && project.status !== 'cancelled';
+  if (filter === 'due') return remaining != null && remaining > 0 && project.status !== 'cancelled';
+  if (filter === 'done') return project.status === 'completed';
+  return true;
+}
+
+function stageLabel(status: ClientProjectStatus) {
+  if (status === 'paused') return 'Paused';
+  if (status === 'cancelled') return 'Cancelled';
+  return PROJECT_STAGES[stageIndex(status)]?.label || status;
+}
 
 export default function MyProjectsList() {
   const router = useRouter();
@@ -16,6 +41,7 @@ export default function MyProjectsList() {
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterId>('all');
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +59,20 @@ export default function MyProjectsList() {
     })();
   }, [user]);
 
+  const totals = useMemo(() => {
+    let paid = 0;
+    let due = 0;
+    let active = 0;
+    for (const project of projects) {
+      paid += Number(project.amount_paid || 0);
+      due += remainingBalance(project) || 0;
+      if (project.status !== 'completed' && project.status !== 'cancelled') active += 1;
+    }
+    return { paid, due, active };
+  }, [projects]);
+
+  const visible = projects.filter((project) => matchesFilter(project, filter));
+
   if (loading || busy) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center gap-3 text-muted">
@@ -49,7 +89,7 @@ export default function MyProjectsList() {
       <AccountPageHeader
         eyebrow="Workspace"
         title="Projects"
-        description="Track progress, see payment requests, and pay an installment or the remaining balance."
+        description="Follow each project from brief to delivery, and deposit toward the balance whenever you’re ready."
         actions={
           <Button onClick={() => router.push('/dashboard/projects/new')} size="sm">
             <Plus size={16} />
@@ -59,7 +99,15 @@ export default function MyProjectsList() {
       />
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+      )}
+
+      {projects.length > 0 && (
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-rule bg-rule shadow-[0_1px_2px_rgb(14_36_54/0.04)] sm:grid-cols-3">
+          <SummaryStat icon={<FolderOpen size={16} />} label="Active" value={String(totals.active)} />
+          <SummaryStat icon={<Wallet size={16} />} label="Paid" value={formatUgx(totals.paid)} />
+          <SummaryStat icon={<ArrowUpRight size={16} />} label="Outstanding" value={formatUgx(totals.due)} />
+        </div>
       )}
 
       {projects.length === 0 ? (
@@ -67,48 +115,133 @@ export default function MyProjectsList() {
           <Info className="mx-auto mb-3 h-8 w-8 text-rule" />
           <div className="font-serif text-lg text-ink-deep">No projects yet</div>
           <p className="mx-auto mb-6 mt-1 max-w-md text-sm text-muted">
-            Submit a brief and we’ll follow up with a quote and payment schedule.
+            Submit a brief and we’ll follow up with a quote. You can deposit toward the project once a total is set.
           </p>
           <Button onClick={() => router.push('/dashboard/projects/new')} size="sm">
             Start a project
           </Button>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="hidden grid-cols-[1fr_auto_auto] gap-4 border-b border-rule bg-paper px-5 py-2.5 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted sm:grid">
-            <span>Project</span>
-            <span>Balance</span>
-            <span className="text-right">Status</span>
-          </div>
-          <div className="divide-y divide-rule">
-            {projects.map((p) => {
-              const remaining = remainingBalance(p);
+        <>
+          <div className="flex flex-wrap gap-2">
+            {FILTERS.map((item) => {
+              const count = projects.filter((project) => matchesFilter(project, item.id)).length;
+              const selected = filter === item.id;
               return (
                 <button
-                  key={p.id}
-                  onClick={() => router.push(`/dashboard/projects/${p.id}`)}
-                  className="grid w-full grid-cols-1 items-center gap-2 px-5 py-4 text-left hover:bg-paper sm:grid-cols-[1fr_auto_auto] sm:gap-4"
+                  key={item.id}
+                  type="button"
+                  onClick={() => setFilter(item.id)}
+                  className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-200 ${
+                    selected
+                      ? 'border-ink bg-ink text-paper'
+                      : 'border-rule bg-surface text-ink hover:border-ink'
+                  }`}
                 >
-                  <div className="min-w-0">
-                    <div className="truncate font-medium text-ink-deep">{p.title}</div>
-                    <div className="mt-0.5 text-sm text-muted">{new Date(p.created_at).toLocaleDateString()}</div>
-                  </div>
-                  <div className="text-sm tabular-nums text-ink">
-                    {p.agreed_total != null
-                      ? remaining != null && remaining > 0
-                        ? `${formatUgx(remaining)} left`
-                        : 'Paid in full'
-                      : 'Awaiting quote'}
-                  </div>
-                  <div className="sm:text-right">
-                    <StatusBadge status={p.status} />
-                  </div>
+                  {item.label}
+                  <span className={`ml-1.5 tabular-nums ${selected ? 'text-paper/70' : 'text-muted'}`}>{count}</span>
                 </button>
               );
             })}
           </div>
-        </Card>
+
+          {visible.length === 0 ? (
+            <Card className="px-6 py-12 text-center">
+              <div className="font-serif text-lg text-ink-deep">Nothing in this view</div>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted">Try another filter to see the rest of your projects.</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {visible.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onOpen={() => router.push(`/dashboard/projects/${project.id}`)}
+                  onDeposit={() => router.push(`/dashboard/projects/${project.id}?deposit=1`)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function SummaryStat({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-surface px-5 py-5">
+      <div className="flex items-center gap-2 text-gold">{icon}</div>
+      <div className="mt-3 font-serif text-2xl tabular-nums text-ink-deep sm:text-3xl">{value}</div>
+      <div className="mt-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">{label}</div>
+    </div>
+  );
+}
+
+function ProjectCard({
+  project,
+  onOpen,
+  onDeposit,
+}: {
+  project: ClientProject;
+  onOpen: () => void;
+  onDeposit: () => void;
+}) {
+  const remaining = remainingBalance(project);
+  const percent = paymentPercent(project);
+  const canDeposit = remaining != null && remaining > 0 && project.status !== 'cancelled';
+
+  return (
+    <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-[0_18px_40px_-32px_rgb(14_36_54/0.45)]">
+      <div className="flex flex-col gap-4 p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <button type="button" onClick={onOpen} className="min-w-0 text-left">
+            <div className="font-serif text-xl text-ink-deep">{project.title}</div>
+            <div className="mt-1 text-sm text-muted">
+              {stageLabel(project.status)} · {new Date(project.created_at).toLocaleDateString()}
+            </div>
+          </button>
+          <StatusBadge status={project.status} />
+        </div>
+
+        {project.progress_note && (
+          <p className="line-clamp-2 text-sm leading-relaxed text-muted">{project.progress_note}</p>
+        )}
+
+        <button type="button" onClick={onOpen} className="text-left">
+          {percent != null ? (
+            <div>
+              <div className="mb-2 flex items-center justify-between text-xs text-muted">
+                <span>Paid {formatUgx(Number(project.amount_paid || 0))}</span>
+                <span className="tabular-nums">{percent}%</span>
+              </div>
+              <PaymentMeter percent={percent} />
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Awaiting a quote before deposits open.</p>
+          )}
+        </button>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
+          <div className="text-sm text-ink">
+            {project.agreed_total == null
+              ? 'Quote pending'
+              : remaining != null && remaining > 0
+                ? `${formatUgx(remaining)} remaining`
+                : 'Paid in full'}
+          </div>
+          <div className="flex gap-2">
+            {canDeposit && (
+              <Button size="sm" onClick={onDeposit}>
+                Deposit
+              </Button>
+            )}
+            <Button size="sm" variant="secondary" onClick={onOpen}>
+              Open
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
