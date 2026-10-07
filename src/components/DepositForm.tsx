@@ -168,7 +168,7 @@ export default function DepositForm({ product, isOpen, onClose, onSuccess }: Dep
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
-          className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-md border border-rule bg-surface"
+          className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-rule bg-surface shadow-[0_30px_60px_-36px_rgb(14_36_54/0.55)]"
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-rule bg-surface p-6">
             <div>

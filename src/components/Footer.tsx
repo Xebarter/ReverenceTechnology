@@ -30,7 +30,8 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative border-t border-gold bg-ink-deep pt-20 pb-10 text-paper">
+    <footer className="relative overflow-hidden border-t border-gold/50 bg-ink-deep pt-20 pb-10 text-paper">
+      <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gold/15 blur-3xl" />
       <Container className="relative z-10">
         <div className="mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>

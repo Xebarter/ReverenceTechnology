@@ -298,7 +298,7 @@ export default function DepositTracking() {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mt-8 border border-rule bg-ink-deep p-6 text-paper"
+                className="panel-dark mt-8 p-6 text-paper"
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <div>
@@ -326,7 +326,7 @@ export default function DepositTracking() {
         )}
 
         {deposits.length === 0 && !loading && searching && (
-          <div className="rounded-md border border-rule bg-surface py-16 text-center">
+          <div className="rounded-2xl border border-rule bg-surface py-16 text-center shadow-[0_1px_2px_rgb(14_36_54/0.04)]">
             <Package className="mx-auto mb-4 text-rule" size={48} />
             <p className="text-lg font-medium text-ink">No deposits found</p>
             <p className="mt-2 text-sm text-muted">Please check your email or phone number and try again.</p>

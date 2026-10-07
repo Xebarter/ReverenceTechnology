@@ -134,12 +134,11 @@ export default function Services() {
                 key={service.id}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                className={`relative flex flex-col rounded-md border border-rule bg-surface p-8 ${
-                  featured ? 'border-l-[3px] border-l-gold' : ''
-                }`}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.6, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full"
               >
+                <div className={`lift-card group flex h-full flex-col p-8 ${featured ? 'lift-card-featured' : ''}`}>
                 {featured && (
                   <span className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">
                     Most selected
@@ -175,10 +174,12 @@ export default function Services() {
 
                 <button
                   onClick={() => handleGetStarted(service)}
-                  className="flex w-full items-center justify-center gap-2 rounded-md bg-ink py-3.5 font-medium text-paper transition hover:bg-ink-deep"
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-ink py-3.5 font-medium text-paper transition-all duration-200 ease-out hover:bg-ink-deep active:scale-[0.98]"
                 >
-                  Start this package <ChevronRight size={18} />
+                  Start this package
+                  <ChevronRight size={18} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
+                </div>
               </motion.div>
             );
           })}
@@ -195,7 +196,7 @@ export default function Services() {
           </div>
         )}
 
-        <div className="mt-20 overflow-hidden rounded-md border border-rule">
+        <div className="mt-20 overflow-hidden rounded-2xl border border-rule shadow-[0_1px_2px_rgb(14_36_54/0.04)]">
           <div className="border-b border-rule bg-surface px-5 py-4 sm:px-6">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">How it works</p>
             <h3 className="mt-1 font-serif text-2xl text-ink-deep">What happens after you start a package</h3>
@@ -223,9 +224,11 @@ export default function Services() {
                 desc: 'Source, assets, and documentation when it ships.',
               },
             ].map((item) => (
-              <div key={item.step} className="bg-surface px-5 py-6 sm:px-6">
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">{item.step}</p>
-                <h4 className="mt-2 font-serif text-lg text-ink-deep">{item.title}</h4>
+              <div key={item.step} className="bg-surface px-5 py-7 transition-colors duration-300 hover:bg-paper sm:px-6">
+                <p className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/40 font-serif text-sm text-gold">
+                  {item.step}
+                </p>
+                <h4 className="mt-4 font-serif text-lg text-ink-deep">{item.title}</h4>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{item.desc}</p>
               </div>
             ))}

@@ -9,7 +9,7 @@ export default function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-sm border border-rule bg-surface px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink ${className}`}
+      className={`inline-flex items-center gap-2 rounded-full border border-rule bg-surface/95 px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink backdrop-blur-sm ${className}`}
     >
       {children}
     </span>

@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { pgInsertRow } from '../../../../server/supabasePostgrest';
 import { hostedCheckoutConfigured } from '../../../../server/hostedCheckoutGateway';
 import { attachHostedCheckoutToOrder, orderDescriptionFromRow } from '../../../../server/orderHostedCheckout';
-import { paytotaConfigured } from '../../../../server/paytotaGateway';
+import { paytotaConfigured, publicPaymentError } from '../../../../server/paytotaGateway';
 import { attachPaytotaToOrder } from '../../../../server/orderPaytota';
 
 export const runtime = 'nodejs';
@@ -90,7 +90,6 @@ export async function POST(req: Request) {
     }
 
     let hostedCheckoutUrl: string | undefined;
-    let mobileMoneyCheckoutUrl: string | undefined;
     let awaitingPhonePrompt = false;
     const description = orderDescriptionFromRow(inserted as Record<string, unknown>);
     if (startHosted) {
@@ -122,32 +121,29 @@ export async function POST(req: Request) {
           order: inserted as Record<string, unknown>,
           productName: description,
         });
-        mobileMoneyCheckoutUrl = mm.checkoutUrl || undefined;
         awaitingPhonePrompt = mm.stkSent;
       } catch (e) {
-        console.error('[orders/create-shop-order] paytota session failed', e);
+        console.error('[orders/create-shop-order] mobile money session failed', e);
+        const message = publicPaymentError(e, 'Could not start mobile money. Your order was saved; contact us or try again.');
         return NextResponse.json(
           {
-            error:
-              e instanceof Error
-                ? e.message
-                : 'Could not start mobile money. Your order was saved; contact us or try again.',
+            error: message,
             orderNumber,
             statusToken,
           },
-          { status: 502, headers: corsHeaders() },
+          { status: /valid Uganda/i.test(message) ? 400 : 502, headers: corsHeaders() },
         );
       }
     }
 
     return NextResponse.json(
-      { orderNumber, statusToken, hostedCheckoutUrl, mobileMoneyCheckoutUrl, awaitingPhonePrompt },
+      { orderNumber, statusToken, hostedCheckoutUrl, awaitingPhonePrompt },
       { status: 200, headers: corsHeaders() },
     );
   } catch (e) {
     console.error('[orders/create-shop-order] fatal', e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Unexpected error' },
+      { error: publicPaymentError(e, 'Unexpected error') },
       { status: 500, headers: corsHeaders() },
     );
   }

@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle2, CreditCard, Loader2, Smartphone } from 'lucide-react';
 import { authJson } from '../lib/authFetch';
 import { useUser } from '../UserContext';
 import { formatUgx, remainingBalance } from '../lib/projectMoney';
 import type { ClientProject, PaymentInstallment } from '../lib/types';
-import { Button, Card } from './ui';
+import { Button, Card, FieldLabel, Input } from './ui';
 import { AccountPageHeader, StatusBadge } from './account';
 
 export default function ClientProjectDetails() {
@@ -21,20 +21,37 @@ export default function ClientProjectDetails() {
   const [busy, setBusy] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [payMethod, setPayMethod] = useState<'card' | 'mobile_money'>('mobile_money');
+  const [payPhone, setPayPhone] = useState('');
   const [mmNotice, setMmNotice] = useState(false);
+  const [waitingId, setWaitingId] = useState<string | null>(null);
+  const [justPaid, setJustPaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const waitingIdRef = useRef<string | null>(null);
   const paidNotice = searchParams?.get('payment') === '1';
 
   const load = async (silent = false) => {
     if (!id) return;
-    if (!silent) setBusy(true);
-    setError(null);
+    if (!silent) {
+      setBusy(true);
+      setError(null);
+    }
     try {
-      const data = await authJson<{ project: ClientProject; installments: PaymentInstallment[] }>(
-        `/api/client-projects/${id}`,
-      );
+      const data = await authJson<{
+        project: ClientProject;
+        installments: PaymentInstallment[];
+        mobileMoney?: { failedIds?: string[] };
+      }>(`/api/client-projects/${id}`);
       setProject(data.project);
       setInstallments(data.installments || []);
+      setPayPhone((current) => current || data.project.customer_phone || '');
+      const currentWait = waitingIdRef.current;
+      const failed = data.mobileMoney?.failedIds || [];
+      if (currentWait && failed.includes(currentWait)) {
+        waitingIdRef.current = null;
+        setWaitingId(null);
+        setMmNotice(false);
+        setError('The payment did not complete. Check your phone and try again.');
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load project.');
     } finally {
@@ -57,19 +74,38 @@ export default function ClientProjectDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mmNotice]);
 
+  useEffect(() => {
+    if (!waitingId) return;
+    const inst = installments.find((i) => i.id === waitingId);
+    if (inst?.status === 'paid') {
+      waitingIdRef.current = null;
+      setMmNotice(false);
+      setWaitingId(null);
+      setJustPaid(true);
+    }
+  }, [installments, waitingId]);
+
   const startPay = async (payload: { installmentId?: string; kind?: 'balance' }) => {
     if (!id) return;
     setPayingId(payload.installmentId || 'balance');
     setError(null);
+    setJustPaid(false);
     setMmNotice(false);
     try {
+      if (payMethod === 'mobile_money' && !payPhone.trim()) {
+        throw new Error('Enter the mobile money number that will receive the payment prompt.');
+      }
       const json = await authJson<{
         hostedCheckoutUrl?: string;
-        checkoutUrl?: string | null;
+        installmentId?: string;
         awaitingPhonePrompt?: boolean;
       }>(`/api/client-projects/${id}/pay`, {
         method: 'POST',
-        body: JSON.stringify({ ...payload, method: payMethod }),
+        body: JSON.stringify({
+          ...payload,
+          method: payMethod,
+          ...(payMethod === 'mobile_money' ? { phone: payPhone.trim() } : {}),
+        }),
       });
       if (payMethod === 'card') {
         if (json.hostedCheckoutUrl) {
@@ -79,15 +115,14 @@ export default function ClientProjectDetails() {
         throw new Error('Card checkout did not return a payment URL');
       }
       if (json.awaitingPhonePrompt) {
+        const nextId = json.installmentId || payload.installmentId || null;
+        waitingIdRef.current = nextId;
         setMmNotice(true);
+        setWaitingId(nextId);
         setPayingId(null);
         return;
       }
-      if (json.checkoutUrl) {
-        window.location.href = json.checkoutUrl;
-        return;
-      }
-      throw new Error('Mobile money checkout could not be started');
+      throw new Error('Could not send the payment prompt. Check the number and try again.');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Could not start payment.');
       setPayingId(null);
@@ -136,7 +171,7 @@ export default function ClientProjectDetails() {
         }
       />
 
-      {paidNotice && (
+      {(paidNotice || justPaid) && (
         <div className="flex items-start gap-3 rounded-md border border-rule bg-paper px-4 py-3 text-sm text-ink">
           <CheckCircle2 size={18} className="mt-0.5 text-gold" />
           Payment received. This page will show the updated balance shortly.
@@ -210,17 +245,32 @@ export default function ClientProjectDetails() {
           {mmNotice && (
             <div className="mb-5 flex items-start gap-3 rounded-md border border-rule bg-paper px-4 py-3 text-sm text-ink">
               <Smartphone size={18} className="mt-0.5 text-gold" />
-              Approve the PIN prompt on your phone. This page will update when Paytota confirms the payment.
+              Approve the PIN prompt on your phone. This page updates when the payment is confirmed.
+            </div>
+          )}
+          {payMethod === 'mobile_money' && (openInstallments.length > 0 || (remaining != null && remaining > 0)) && (
+            <div className="mb-5">
+              <FieldLabel htmlFor="pay-phone">Mobile money number</FieldLabel>
+              <Input
+                id="pay-phone"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="07XXXXXXXX"
+                value={payPhone}
+                onChange={(e) => setPayPhone(e.target.value)}
+                disabled={mmNotice}
+              />
+              <p className="mt-1 text-xs text-muted">MTN or Airtel. A PIN prompt is sent to this number.</p>
             </div>
           )}
           {remaining != null && remaining > 0 && (
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted">
                 {payMethod === 'mobile_money'
-                  ? 'Mobile money is collected by Paytota. Use the number on this project for the prompt.'
-                  : 'Card payments are collected securely by DPO.'}
+                  ? 'Approve the prompt on your phone to pay. You stay on this page.'
+                  : 'You’ll complete card payment on a secure page.'}
               </p>
-              <Button onClick={() => startPay({ kind: 'balance' })} disabled={Boolean(payingId)} size="sm">
+              <Button onClick={() => startPay({ kind: 'balance' })} disabled={Boolean(payingId) || mmNotice} size="sm">
                 {payingId === 'balance'
                   ? payMethod === 'mobile_money'
                     ? 'Sending prompt…'
@@ -243,7 +293,7 @@ export default function ClientProjectDetails() {
                     <div className="font-medium text-ink-deep">{formatUgx(i.amount)}</div>
                     {i.note && <div className="text-sm text-muted">{i.note}</div>}
                   </div>
-                  <Button size="sm" onClick={() => startPay({ installmentId: i.id })} disabled={Boolean(payingId)}>
+                  <Button size="sm" onClick={() => startPay({ installmentId: i.id })} disabled={Boolean(payingId) || mmNotice}>
                     {payingId === i.id
                       ? payMethod === 'mobile_money'
                         ? 'Sending prompt…'

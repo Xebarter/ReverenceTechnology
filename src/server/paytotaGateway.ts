@@ -29,14 +29,34 @@ export function paytotaBaseUrl(): string {
 
 function secretKey(): string {
   const key = process.env.PAYTOTA_SECRET_KEY?.trim();
-  if (!key) throw new Error('Paytota is not configured');
+  if (!key) throw new Error('Mobile money is not available right now.');
   return key;
 }
 
 function brandId(): string {
   const id = process.env.PAYTOTA_BRAND_ID?.trim();
-  if (!id) throw new Error('Paytota is not configured');
+  if (!id) throw new Error('Mobile money is not available right now.');
   return id;
+}
+
+/** Customer-facing copy must not include the gateway name. */
+export function publicPaymentError(
+  error: unknown,
+  fallback = 'Mobile money could not be started. Please try again.',
+): string {
+  const raw = error instanceof Error ? error.message : '';
+  if (!raw.trim() || /paytota/i.test(raw) || /\bdpo\b/i.test(raw)) return fallback;
+  return raw.slice(0, 240);
+}
+
+function customerGatewayMessage(data: unknown, fallback: string): string {
+  if (!data || typeof data !== 'object') return fallback;
+  const obj = data as Record<string, unknown>;
+  const direct = obj.message ?? obj.detail ?? obj.error;
+  const text = Array.isArray(direct) ? direct.map(String).join(' ') : typeof direct === 'string' ? direct : '';
+  const cleaned = text.replace(/paytota/gi, '').replace(/\s+/g, ' ').trim();
+  if (!cleaned || /<\s*html|<\s*!doctype/i.test(cleaned)) return fallback;
+  return cleaned.slice(0, 240);
 }
 
 export function paytotaToken(purchaseId: string): string {
@@ -55,6 +75,14 @@ export function toPaytotaUgPhone(phone: string): string {
   if (d.startsWith('0') && d.length >= 10) return `256${d.slice(1, 10)}`;
   if (d.length === 9) return `256${d}`;
   return d;
+}
+
+export function requireUgMobile(phone: string): string {
+  const n = toPaytotaUgPhone(phone);
+  if (!/^256\d{9}$/.test(n)) {
+    throw new Error('Enter a valid Uganda mobile number (MTN or Airtel).');
+  }
+  return n;
 }
 
 export function mapPaytotaStatus(status: string | null | undefined): PaytotaPaymentStatus {
@@ -91,11 +119,14 @@ async function paytotaJson<T>(path: string, init?: RequestInit): Promise<T> {
     data = null;
   }
   if (!res.ok) {
-    const msg =
-      data && typeof data === 'object' && 'message' in data
-        ? String((data as { message: unknown }).message)
-        : text.slice(0, 240) || `Paytota HTTP ${res.status}`;
-    throw new Error(msg);
+    throw new Error(
+      customerGatewayMessage(
+        data,
+        res.status >= 500
+          ? 'Mobile money is temporarily unavailable. Please try again.'
+          : 'Could not start mobile money. Check the number and try again.',
+      ),
+    );
   }
   return data as T;
 }
@@ -113,7 +144,7 @@ export async function createPaytotaPurchase(input: {
   cancelRedirect?: string;
 }): Promise<PaytotaPurchase> {
   const currency = input.currency || process.env.HOSTED_CHECKOUT_CURRENCY?.trim() || 'UGX';
-  const phone = input.phone ? toPaytotaUgPhone(input.phone) : '';
+  const phone = input.phone ? requireUgMobile(input.phone) : '';
   const payload = {
     client: {
       email: input.email,
@@ -142,7 +173,7 @@ export async function createPaytotaPurchase(input: {
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  if (!created?.id) throw new Error('Paytota did not return a purchase id');
+  if (!created?.id) throw new Error('Mobile money could not be started. Please try again.');
   return created;
 }
 
@@ -153,15 +184,26 @@ export async function executePaytotaStk(purchaseId: string): Promise<void> {
 
   const res = await fetch(`${paytotaBaseUrl()}/p/${encodeURIComponent(purchaseId)}/`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${secretKey()}`,
-    },
     body: form,
   });
   const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text.slice(0, 240) || `Paytota STK HTTP ${res.status}`);
+  let data: unknown = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
   }
+  const fallback = 'Could not send the payment prompt. Check the number and try again.';
+  if (!res.ok || !data || typeof data !== 'object') {
+    throw new Error(fallback);
+  }
+  const body = data as { status?: unknown; details?: { return_code?: unknown; message?: unknown } };
+  const status = String(body.status || '').toLowerCase();
+  const code = String(body.details?.return_code || '');
+  if (status === 'pending' || code === '200') return;
+  const detail = typeof body.details?.message === 'string' ? body.details.message : '';
+  const cleaned = detail.replace(/paytota/gi, '').replace(/\s+/g, ' ').trim();
+  throw new Error(cleaned || fallback);
 }
 
 export async function getPaytotaPurchase(purchaseId: string): Promise<PaytotaPurchase> {

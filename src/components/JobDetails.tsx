@@ -167,7 +167,7 @@ export default function JobDetails() {
               </div>
             </Card>
 
-            <div className="border border-rule bg-ink-deep p-10 text-paper">
+            <div className="panel-dark p-10 text-paper">
               <h2 className="mb-6 font-serif text-2xl font-medium">About Reverence Technology</h2>
               <p className="mb-6 text-lg leading-relaxed text-paper/70">
                 We are a hub of innovation in Kampala, building technology that matters for East Africa.

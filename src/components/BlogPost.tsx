@@ -96,7 +96,7 @@ export default function BlogPost() {
 
                 <div className="flex items-center justify-center gap-6 font-medium text-muted">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md border border-rule bg-paper-2 font-medium text-ink">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-rule bg-paper-2 font-medium text-ink">
                       {post.author[0]}
                     </div>
                     <span className="font-medium text-ink">{post.author}</span>
@@ -121,11 +121,11 @@ export default function BlogPost() {
               {post.cover_image_url ? (
                 <img
                   src={post.cover_image_url}
-                  className="h-[420px] w-full border border-rule object-cover"
+                  className="hero-frame h-[420px] w-full border border-rule object-cover"
                   alt={post.title}
                 />
               ) : (
-                <div className="flex h-[280px] w-full items-center justify-center border border-rule bg-paper-2 text-rule">
+                <div className="hero-frame flex h-[280px] w-full items-center justify-center border border-rule bg-paper-2 text-rule">
                   <Bookmark size={64} />
                 </div>
               )}
@@ -148,9 +148,9 @@ export default function BlogPost() {
               </div>
             </div>
 
-            <footer className="mt-20 flex flex-col items-center gap-8 border border-rule bg-surface p-8 md:flex-row md:p-12">
+            <footer className="mt-20 flex flex-col items-center gap-8 rounded-2xl border border-rule bg-surface p-8 shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:flex-row md:p-12">
               <div className="shrink-0">
-                <div className="flex h-20 w-20 items-center justify-center rounded-md border border-rule bg-paper-2 font-serif text-3xl text-ink-deep">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border border-rule bg-paper-2 font-serif text-3xl text-ink-deep">
                   {post.author[0]}
                 </div>
               </div>
@@ -223,7 +223,7 @@ function ShareButton({ platform }: { platform: string }) {
   return (
     <button
       onClick={handleShare}
-      className="flex h-10 w-10 items-center justify-center rounded-md border border-rule bg-surface text-muted transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-rule bg-surface text-muted transition-all duration-200 hover:border-ink hover:bg-ink hover:text-paper"
     >
       {icons[platform]}
     </button>

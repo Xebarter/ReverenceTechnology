@@ -146,7 +146,7 @@ const ProjectDetails: React.FC = () => {
               </div>
 
               <div>
-                <div className="flex items-center gap-1.5 border border-b-0 border-rule bg-ink-deep p-3">
+                <div className="flex items-center gap-1.5 rounded-t-2xl border border-b-0 border-rule bg-ink-deep p-3">
                   <div className="h-3 w-3 rounded-full bg-paper/30" />
                   <div className="h-3 w-3 rounded-full bg-paper/30" />
                   <div className="h-3 w-3 rounded-full bg-paper/30" />
@@ -154,7 +154,7 @@ const ProjectDetails: React.FC = () => {
                     {project.link || "https://case-study-preview.internal"}
                   </div>
                 </div>
-                <div className="overflow-hidden border border-rule bg-surface">
+                <div className="overflow-hidden rounded-b-2xl border border-rule bg-surface shadow-[0_18px_40px_-32px_rgb(14_36_54/0.45)]">
                   <div className="flex min-h-[300px] max-h-[600px] w-full items-center justify-center overflow-hidden bg-paper">
                     {project.image_url ? (
                       <img
@@ -173,7 +173,7 @@ const ProjectDetails: React.FC = () => {
               </div>
             </section>
 
-            <article className="border border-rule bg-surface p-8 md:p-12">
+            <article className="rounded-2xl border border-rule bg-surface p-8 shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:p-12">
               <h2 className="mb-8 border-b border-rule pb-4 font-serif text-2xl font-medium text-ink-deep">
                 The Challenge & Solution
               </h2>
@@ -189,7 +189,7 @@ const ProjectDetails: React.FC = () => {
               <h3 className="mb-6 flex items-center gap-2 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted">
                 <Smartphone className="h-4 w-4 text-gold" /> Mobile Experience
               </h3>
-              <div className="relative mx-auto aspect-[9/18] w-full max-w-[260px] overflow-hidden rounded-md border border-rule bg-ink-deep">
+              <div className="relative mx-auto aspect-[9/18] w-full max-w-[260px] overflow-hidden rounded-[1.75rem] border border-rule bg-ink-deep shadow-[0_18px_40px_-28px_rgb(14_36_54/0.55)]">
                 <div className="flex h-full w-full items-center justify-center">
                   {project.mobile_image_url ? (
                     <img
@@ -214,7 +214,7 @@ const ProjectDetails: React.FC = () => {
                 {project.technologies.map((tech, index) => (
                   <span
                     key={index}
-                    className="rounded-md border border-rule bg-paper px-3 py-1.5 text-xs font-medium text-ink"
+                    className="rounded-full border border-rule bg-paper px-3 py-1.5 text-xs font-medium text-ink"
                   >
                     {tech}
                   </span>
@@ -222,7 +222,7 @@ const ProjectDetails: React.FC = () => {
               </div>
             </Card>
 
-            <div className="border border-rule bg-ink-deep p-6 text-paper">
+            <div className="panel-dark p-6 text-paper">
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-paper/60"><Calendar className="h-4 w-4" /> Launched</span>
@@ -253,7 +253,7 @@ const ProjectDetails: React.FC = () => {
                     href={`/projects/${rp.id}`}
                     key={rp.id}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="group flex flex-col overflow-hidden border border-rule bg-surface"
+                    className="hover-lift group flex flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)]"
                   >
                     <div className="relative flex aspect-video items-center justify-center overflow-hidden border-b border-rule bg-paper">
                       <img

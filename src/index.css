@@ -51,6 +51,77 @@ select:focus {
   display: none;
 }
 
+.lift-card {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(14 36 54 / 0.04);
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lift-card:hover,
+.hover-lift:hover,
+.group:hover .hover-lift {
+  transform: translateY(-4px);
+  border-color: #d4cbb8;
+  box-shadow: 0 22px 44px -28px rgb(14 36 54 / 0.42);
+}
+
+.hover-lift {
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lift-card-featured {
+  box-shadow: 0 18px 40px -28px rgb(176 141 87 / 0.55);
+}
+
+.lift-card-featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+.hero-frame {
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 0 rgb(255 252 247 / 0.45) inset,
+    0 30px 60px -36px rgb(14 36 54 / 0.55);
+}
+
+.panel-dark {
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(176 141 87 / 0.2), transparent 46%),
+    var(--ink-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .lift-card,
+  .lift-card:hover,
+  .hover-lift,
+  .hover-lift:hover,
+  .group:hover .hover-lift {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* Quill editor — align with paper / ink */
 .ql-toolbar.ql-snow {
   border-color: var(--rule) !important;

@@ -4,11 +4,12 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../UserContext';
-import { ArrowRight, Briefcase, FileText, FolderOpen, Info, Loader2, ShoppingBag, Wrench } from 'lucide-react';
+import { ArrowRight, Briefcase, FileText, FolderOpen, Info, Loader2, ShoppingBag, Wallet, Wrench } from 'lucide-react';
 import { Button, Card } from './ui';
 import { AccountPageHeader, StatusBadge } from './account';
 import { authJson } from '../lib/authFetch';
 import type { ClientProject } from '../lib/types';
+import { formatUgx } from '../lib/projectMoney';
 
 type OrderRow = {
   id: string;
@@ -20,12 +21,27 @@ type OrderRow = {
   items: any;
 };
 
+type AccountPayment = {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  amount: number;
+  status: string;
+  method: 'mobile_money' | 'card';
+  purpose: string;
+};
+
 type JobAppRow = {
   id: string;
   created_at: string;
   status: string | null;
   jobs?: { id: string; title: string; location: string | null } | null;
 };
+
+function isCollectionOrder(items: unknown): boolean {
+  if (!Array.isArray(items)) return false;
+  return items.some((it) => it && typeof it === 'object' && (it as { category?: string }).category === 'collection');
+}
 
 function isServiceOrder(items: unknown): boolean {
   if (!Array.isArray(items)) return false;
@@ -39,6 +55,7 @@ export default function UserDashboard() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [apps, setApps] = useState<JobAppRow[]>([]);
   const [projects, setProjects] = useState<ClientProject[]>([]);
+  const [payments, setPayments] = useState<AccountPayment[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,7 +64,7 @@ export default function UserDashboard() {
       setBusy(true);
       setError(null);
       try {
-        const [ordersRes, appsRes, projectsRes] = await Promise.all([
+        const [ordersRes, appsRes, projectsRes, paymentsRes] = await Promise.all([
           supabase
             .from('orders')
             .select('id,order_number,created_at,payment_status,order_status,total_amount,items')
@@ -55,6 +72,7 @@ export default function UserDashboard() {
             .limit(20),
           authJson<{ applications: JobAppRow[] }>('/api/job-applications').catch(() => ({ applications: [] })),
           authJson<{ projects: ClientProject[] }>('/api/client-projects').catch(() => ({ projects: [] })),
+          authJson<{ payments: AccountPayment[] }>('/api/payments/mine').catch(() => ({ payments: [] })),
         ]);
 
         if (ordersRes.error) throw ordersRes.error;
@@ -62,6 +80,7 @@ export default function UserDashboard() {
         setOrders((ordersRes.data as any) || []);
         setApps(appsRes.applications || []);
         setProjects(projectsRes.projects || []);
+        setPayments(paymentsRes.payments || []);
       } catch (e: any) {
         setError(e?.message || 'Failed to load dashboard.');
       } finally {
@@ -83,26 +102,53 @@ export default function UserDashboard() {
   if (!user) return null;
 
   const paidServiceOrders = orders.filter((o) => isServiceOrder(o.items) && o.payment_status === 'paid');
-  const otherOrders = orders.filter((o) => !isServiceOrder(o.items));
+  const otherOrders = orders.filter((o) => !isServiceOrder(o.items) && !isCollectionOrder(o.items));
 
   return (
     <div className="space-y-8">
       <AccountPageHeader
         eyebrow="Overview"
         title="Dashboard"
-        description="A snapshot of your projects, services, orders, and job applications."
+        description="A snapshot of your payments, projects, services, and applications."
       />
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
       )}
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-rule bg-rule shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:grid-cols-4">
         <StatCard title="Projects" value={projects.length} icon={<FolderOpen size={18} />} />
         <StatCard title="Paid services" value={paidServiceOrders.length} icon={<Wrench size={18} />} />
         <StatCard title="Orders" value={otherOrders.length} icon={<ShoppingBag size={18} />} />
         <StatCard title="Applications" value={apps.length} icon={<Briefcase size={18} />} />
       </div>
+
+      <Card className="overflow-hidden">
+        <SectionHead icon={<Wallet size={18} />} title="Payments" actionLabel="Pay" onViewAll={() => router.push('/pay')} />
+        {payments.length === 0 ? (
+          <EmptyState
+            title="No payments yet"
+            desc="Payments made with this email show up here, including ones sent before you opened an account."
+            actionLabel="Make a payment"
+            onAction={() => router.push('/pay')}
+          />
+        ) : (
+          <div className="divide-y divide-rule">
+            {payments.slice(0, 8).map((payment) => (
+              <div key={payment.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-ink-deep">{payment.purpose}</div>
+                  <div className="mt-0.5 text-sm text-muted">
+                    {formatUgx(payment.amount)} · {payment.method === 'mobile_money' ? 'Mobile money' : 'Card'} ·{' '}
+                    {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : '—'}
+                  </div>
+                </div>
+                <StatusBadge status={payment.status} className="shrink-0" />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="overflow-hidden">
         <SectionHead
@@ -216,7 +262,17 @@ function StatCard({ title, value, icon }: { title: string; value: number; icon: 
   );
 }
 
-function SectionHead({ icon, title, onViewAll }: { icon: ReactNode; title: string; onViewAll: () => void }) {
+function SectionHead({
+  icon,
+  title,
+  onViewAll,
+  actionLabel = 'View all',
+}: {
+  icon: ReactNode;
+  title: string;
+  onViewAll: () => void;
+  actionLabel?: string;
+}) {
   return (
     <div className="flex items-center justify-between border-b border-rule px-5 py-4">
       <div className="flex items-center gap-2.5 text-ink-deep">
@@ -224,7 +280,7 @@ function SectionHead({ icon, title, onViewAll }: { icon: ReactNode; title: strin
         <h2 className="font-serif text-lg">{title}</h2>
       </div>
       <button onClick={onViewAll} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-        View all <ArrowRight size={14} />
+        {actionLabel} <ArrowRight size={14} />
       </button>
     </div>
   );

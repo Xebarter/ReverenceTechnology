@@ -3,6 +3,7 @@ import { authErrorResponse, requireFirebaseUser } from '../../../../server/requi
 import { eq, pgSelect } from '../../../../server/supabasePostgrest';
 import { requireSupabaseService } from '../../../../server/supabaseEnv';
 import { mapClientProject, mapInstallment } from '../../../../server/clientProjects';
+import { reconcileInstallmentRows } from '../../../../server/orderPaytota';
 
 export const runtime = 'nodejs';
 
@@ -25,17 +26,22 @@ export async function GET(req: Request, context: RouteContext) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const { rows: payments } = await pgSelect(
-      url,
-      serviceKey,
-      'payment_installments',
-      `${eq('client_project_id', id)}&order=requested_at.desc`,
-      '*',
-    );
+    const installmentQuery = `${eq('client_project_id', id)}&order=requested_at.desc`;
+    let { rows: payments } = await pgSelect(url, serviceKey, 'payment_installments', installmentQuery, '*');
+
+    const failedIds = await reconcileInstallmentRows(url, serviceKey, payments);
+    let projectRow = row;
+    if (failedIds.length > 0 || payments.some((p) => p.trans_token && String(p.status) === 'requested')) {
+      const refreshed = await pgSelect(url, serviceKey, 'client_projects', eq('id', id), '*');
+      if (refreshed.rows[0]) projectRow = refreshed.rows[0];
+      const paymentsAgain = await pgSelect(url, serviceKey, 'payment_installments', installmentQuery, '*');
+      if (!paymentsAgain.error) payments = paymentsAgain.rows;
+    }
 
     return NextResponse.json({
-      project: mapClientProject(row),
+      project: mapClientProject(projectRow),
       installments: payments.map(mapInstallment),
+      mobileMoney: { failedIds },
     });
   } catch (e) {
     const { body, status } = authErrorResponse(e);

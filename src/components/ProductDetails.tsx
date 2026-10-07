@@ -83,11 +83,11 @@ export default function ProductDetails({ product, isOpen, onClose }: ProductDeta
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
-              className="relative my-8 w-full max-w-5xl rounded-md border border-rule bg-surface"
+              className="relative my-8 w-full max-w-5xl overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_30px_60px_-36px_rgb(14_36_54/0.55)]"
             >
               <button
                 onClick={onClose}
-                className="absolute right-6 top-6 z-10 rounded-md p-2 text-muted hover:bg-paper"
+                className="absolute right-6 top-6 z-10 rounded-full p-2 text-muted transition-colors hover:bg-paper"
               >
                 <X size={24} />
               </button>

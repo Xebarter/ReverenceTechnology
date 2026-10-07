@@ -8,17 +8,21 @@ import {
   paytotaConfigured,
   paytotaToken,
   purchaseIdFromToken,
+  requireUgMobile,
   type PaytotaPaymentStatus,
 } from './paytotaGateway';
 
 export type PaytotaCheckoutResult = {
   purchaseId: string;
-  checkoutUrl: string | null;
-  stkSent: boolean;
+  stkSent: true;
 };
 
+export type PaytotaFinalizeResult =
+  | { kind: 'installment'; projectId: string; statusToken: string; paymentStatus: PaytotaPaymentStatus }
+  | { kind: 'order'; orderNumber: string; statusToken: string; paymentStatus: PaytotaPaymentStatus };
+
 function returnUrl(base: string, ref: string, failed = false): string {
-  const u = new URL(`${base}/api/payments/paytota/return`);
+  const u = new URL(`${base}/api/payments/mobile-money/return`);
   u.searchParams.set('ref', ref);
   if (failed) u.searchParams.set('failed', '1');
   return u.toString();
@@ -67,7 +71,7 @@ export async function attachPaytotaToOrder(input: {
   const amount = Number(input.order.total_amount);
   const email = String(input.order.customer_email ?? '');
   const name = String(input.order.customer_name ?? '');
-  const phone = input.order.customer_phone != null ? String(input.order.customer_phone) : '';
+  const phone = requireUgMobile(input.order.customer_phone != null ? String(input.order.customer_phone) : '');
   const base = getPublicAppBaseUrl();
   const ref = orderNumber;
 
@@ -90,20 +94,11 @@ export async function attachPaytotaToOrder(input: {
   });
   if (error) throw new Error(error);
 
-  let stkSent = false;
-  if (phone.trim()) {
-    try {
-      await executePaytotaStk(purchase.id);
-      stkSent = true;
-    } catch (e) {
-      console.error('[paytota] STK execute failed, falling back to checkout URL', e);
-    }
-  }
+  await executePaytotaStk(purchase.id);
 
   return {
     purchaseId: purchase.id,
-    checkoutUrl: purchase.checkout_url || null,
-    stkSent,
+    stkSent: true,
   };
 }
 
@@ -122,10 +117,11 @@ export async function attachPaytotaToInstallment(input: {
 
   const base = getPublicAppBaseUrl();
   const ref = input.reference;
+  const phone = requireUgMobile(input.customerPhone || '');
   const purchase = await createPaytotaPurchase({
     amount: input.amount,
     email: input.customerEmail,
-    phone: input.customerPhone,
+    phone,
     name: input.customerName,
     productName: input.productName,
     reference: ref,
@@ -147,20 +143,11 @@ export async function attachPaytotaToInstallment(input: {
   );
   if (error) throw new Error(error);
 
-  let stkSent = false;
-  if (input.customerPhone?.trim()) {
-    try {
-      await executePaytotaStk(purchase.id);
-      stkSent = true;
-    } catch (e) {
-      console.error('[paytota] STK execute failed, falling back to checkout URL', e);
-    }
-  }
+  await executePaytotaStk(purchase.id);
 
   return {
     purchaseId: purchase.id,
-    checkoutUrl: purchase.checkout_url || null,
-    stkSent,
+    stkSent: true,
   };
 }
 
@@ -219,11 +206,7 @@ export async function finalizePaytotaByPurchaseId(
   purchaseId: string,
   hintedStatus?: PaytotaPaymentStatus,
   hintedReference?: string | null,
-): Promise<
-  | { kind: 'installment'; projectId: string; statusToken: string }
-  | { kind: 'order'; orderNumber: string; statusToken: string }
-  | null
-> {
+): Promise<PaytotaFinalizeResult | null> {
   const token = paytotaToken(purchaseId);
   let status = hintedStatus || 'pending';
   let reference = hintedReference || purchaseId;
@@ -233,7 +216,7 @@ export async function finalizePaytotaByPurchaseId(
     status = mapPaytotaStatus(live.status);
     reference = live.reference_generated || live.reference || purchaseId;
   } catch (e) {
-    console.error('[paytota] purchase lookup failed', e);
+    console.error('[mobile-money] purchase lookup failed', e);
     if (!hintedStatus) return null;
   }
 
@@ -245,8 +228,17 @@ export async function finalizePaytotaByPurchaseId(
     'id,client_project_id,status,amount,status_token,payment_reference',
   );
   if (instRows[0]) {
-    const applied = await applyStatusToInstallment(supabaseUrl, serviceKey, instRows[0], status, reference);
-    return { kind: 'installment', ...applied };
+    const row = instRows[0];
+    const alreadyPaid = String(row.status) === 'paid';
+    if (!alreadyPaid && status !== 'pending') {
+      await applyStatusToInstallment(supabaseUrl, serviceKey, row, status, reference);
+    }
+    return {
+      kind: 'installment',
+      projectId: String(row.client_project_id),
+      statusToken: String(row.status_token),
+      paymentStatus: alreadyPaid ? 'paid' : status,
+    };
   }
 
   const { rows: orderRows } = await pgSelect(
@@ -257,22 +249,52 @@ export async function finalizePaytotaByPurchaseId(
     'id,order_number,status_token,payment_status,payment_reference',
   );
   if (orderRows[0]) {
-    const applied = await applyStatusToOrder(supabaseUrl, serviceKey, orderRows[0], status, reference);
-    return { kind: 'order', ...applied };
+    const row = orderRows[0];
+    const alreadyPaid = String(row.payment_status) === 'paid';
+    if (!alreadyPaid && status !== 'pending') {
+      await applyStatusToOrder(supabaseUrl, serviceKey, row, status, reference);
+    }
+    return {
+      kind: 'order',
+      orderNumber: String(row.order_number),
+      statusToken: String(row.status_token),
+      paymentStatus: alreadyPaid ? 'paid' : status,
+    };
   }
 
   return null;
+}
+
+/** Ask the gateway about open installment prompts and return ids whose latest attempt failed. */
+export async function reconcileInstallmentRows(
+  supabaseUrl: string,
+  serviceKey: string,
+  rows: Record<string, unknown>[],
+): Promise<string[]> {
+  const failedIds: string[] = [];
+  if (!paytotaConfigured()) return failedIds;
+  for (const row of rows) {
+    const rowStatus = String(row.status || '');
+    if (rowStatus === 'paid' || rowStatus === 'cancelled') continue;
+    const purchaseId = purchaseIdFromToken(row.trans_token != null ? String(row.trans_token) : null);
+    if (!purchaseId) continue;
+    try {
+      const result = await finalizePaytotaByPurchaseId(supabaseUrl, serviceKey, purchaseId);
+      if (result?.kind === 'installment' && result.paymentStatus === 'failed') {
+        failedIds.push(String(row.id));
+      }
+    } catch (e) {
+      console.error('[mobile-money] installment status check failed', e);
+    }
+  }
+  return failedIds;
 }
 
 export async function finalizePaytotaByOurReference(
   supabaseUrl: string,
   serviceKey: string,
   ref: string,
-): Promise<
-  | { kind: 'installment'; projectId: string; statusToken: string }
-  | { kind: 'order'; orderNumber: string; statusToken: string }
-  | null
-> {
+): Promise<PaytotaFinalizeResult | null> {
   if (ref.startsWith('inst:')) {
     const installmentId = ref.slice(5);
     const { rows } = await pgSelect(
@@ -286,7 +308,12 @@ export async function finalizePaytotaByOurReference(
     if (!row) return null;
     const purchaseId = purchaseIdFromToken(row.trans_token != null ? String(row.trans_token) : null);
     if (!purchaseId) {
-      return { kind: 'installment', projectId: String(row.client_project_id), statusToken: String(row.status_token) };
+      return {
+        kind: 'installment',
+        projectId: String(row.client_project_id),
+        statusToken: String(row.status_token),
+        paymentStatus: String(row.status) === 'paid' ? 'paid' : 'pending',
+      };
     }
     return finalizePaytotaByPurchaseId(supabaseUrl, serviceKey, purchaseId);
   }
@@ -302,7 +329,12 @@ export async function finalizePaytotaByOurReference(
   if (!row) return null;
   const purchaseId = purchaseIdFromToken(row.trans_token != null ? String(row.trans_token) : null);
   if (!purchaseId) {
-    return { kind: 'order', orderNumber: String(row.order_number), statusToken: String(row.status_token) };
+    return {
+      kind: 'order',
+      orderNumber: String(row.order_number),
+      statusToken: String(row.status_token),
+      paymentStatus: String(row.payment_status) === 'paid' ? 'paid' : 'pending',
+    };
   }
   return finalizePaytotaByPurchaseId(supabaseUrl, serviceKey, purchaseId);
 }

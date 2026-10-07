@@ -294,7 +294,7 @@ export default function OrderTracking() {
         )}
 
         {orders.length === 0 && !loading && searching && (
-          <div className="rounded-md border border-rule bg-surface py-16 text-center">
+          <div className="rounded-2xl border border-rule bg-surface py-16 text-center shadow-[0_1px_2px_rgb(14_36_54/0.04)]">
             <Package className="mx-auto mb-4 text-rule" size={48} />
             <p className="text-lg font-medium text-ink">No orders found</p>
             <p className="mt-2 text-sm text-muted">Please check your order number, email, or phone number and try again.</p>

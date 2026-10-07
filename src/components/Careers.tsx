@@ -106,7 +106,7 @@ export default function Careers() {
   }, [jobs, query, employmentType, location]);
 
   const SkeletonCard = () => (
-    <div className="animate-pulse border border-rule bg-surface p-6">
+    <div className="animate-pulse rounded-2xl border border-rule bg-surface p-6">
       <div className="mb-4 h-6 w-3/4 bg-paper-2" />
       <div className="space-y-3">
         <div className="h-4 w-1/2 bg-paper-2" />
@@ -128,7 +128,7 @@ export default function Careers() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-16 border border-rule bg-surface p-4 md:p-5"
+          className="mb-16 rounded-2xl border border-rule bg-surface p-4 shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:p-5"
         >
           <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-12 md:gap-4">
             <div className="md:col-span-6">
@@ -308,9 +308,12 @@ export default function Careers() {
             {filteredJobs.map((job) => (
               <motion.div
                 key={job.id}
-                className="group flex cursor-pointer flex-col justify-between border border-rule bg-surface p-7 md:p-8"
-                onClick={() => router.push(`/job/${job.id}`)}
+                className="h-full"
               >
+                <article
+                  className="hover-lift group flex h-full cursor-pointer flex-col justify-between rounded-2xl border border-rule bg-surface p-7 shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:p-8"
+                  onClick={() => router.push(`/job/${job.id}`)}
+                >
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-4">
                     <h3 className="font-serif text-xl font-medium tracking-tight text-ink-deep md:text-2xl">
@@ -362,9 +365,10 @@ export default function Careers() {
                   </div>
                 </div>
 
-                <span className="flex w-full items-center justify-center rounded-md bg-ink py-3.5 font-medium text-paper">
-                  View role <ArrowRight size={18} className="ml-2" />
+                <span className="flex w-full items-center justify-center rounded-xl bg-ink py-3.5 font-medium text-paper transition-colors group-hover:bg-ink-deep">
+                  View role <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
+                </article>
               </motion.div>
             ))}
           </div>
@@ -376,8 +380,8 @@ export default function Careers() {
 
 function CultureCard({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
-    <div className="border border-rule bg-surface p-7 md:p-8">
-      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-rule bg-paper">
+    <div className="hover-lift rounded-2xl border border-rule bg-surface p-7 shadow-[0_1px_2px_rgb(14_36_54/0.04)] md:p-8">
+      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-rule bg-paper">
         {icon}
       </div>
       <h3 className="mb-2 font-serif text-lg font-medium tracking-tight text-ink-deep">{title}</h3>

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Monitor,
-  Smartphone,
   ArrowRight,
   Search,
   Layout
@@ -66,7 +65,7 @@ const ProjectsList: React.FC = () => {
         <Container className="py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-[350px] animate-pulse border border-rule bg-surface" />
+              <div key={i} className="h-[350px] animate-pulse rounded-2xl border border-rule bg-surface" />
             ))}
           </div>
         </Container>
@@ -95,7 +94,7 @@ const ProjectsList: React.FC = () => {
 
       <Container className="py-16">
         {projects.length === 0 ? (
-          <div className="border border-dashed border-rule py-16 text-center">
+          <div className="rounded-2xl border border-dashed border-rule py-16 text-center">
             <Search className="mx-auto mb-4 h-12 w-12 text-rule" />
             <h3 className="font-serif text-xl font-medium text-ink-deep">Portfolio under maintenance</h3>
             <p className="mt-2 text-muted">We are currently updating our latest success stories.</p>
@@ -105,44 +104,39 @@ const ProjectsList: React.FC = () => {
             {projects.map((project) => (
               <article
                 key={project.id}
-                className="group flex h-full cursor-pointer flex-col overflow-hidden border border-rule bg-surface"
+                className="hover-lift group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)]"
                 onClick={() => handleProjectClick(project.id)}
               >
-                <div className="relative flex h-36 overflow-hidden border-b border-rule bg-paper-2">
-                  <div className="relative flex w-2/3 items-center justify-center border-r border-rule bg-surface p-2">
-                    <div className="absolute left-2 top-2 z-10 flex gap-1">
-                      <div className="h-1.5 w-1.5 rounded-full bg-rule" />
-                      <div className="h-1.5 w-1.5 rounded-full bg-rule" />
-                    </div>
-                    {project.image_url ? (
-                      <img
-                        src={project.image_url}
-                        alt="Desktop"
-                        className="h-full w-full object-contain"
-                      />
-                    ) : (
-                      <Monitor className="h-6 w-6 text-rule" />
-                    )}
-                    <span className="absolute bottom-1 right-2 text-[8px] font-semibold uppercase tracking-tighter text-muted">Desktop</span>
-                  </div>
-
-                  <div className="relative flex w-1/3 items-center justify-center p-2">
-                    {project.mobile_image_url ? (
+                <div className="relative flex h-48 items-center justify-center overflow-hidden bg-paper-2 p-4">
+                  {project.image_url ? (
+                    <img
+                      src={project.image_url}
+                      alt={project.title}
+                      className="h-full w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03]"
+                    />
+                  ) : project.mobile_image_url ? (
+                    <img
+                      src={project.mobile_image_url}
+                      alt={project.title}
+                      className="h-full w-auto object-contain"
+                    />
+                  ) : (
+                    <Monitor className="h-6 w-6 text-rule" />
+                  )}
+                  {project.image_url && project.mobile_image_url && (
+                    <div className="absolute bottom-3 right-3 h-24 w-14 overflow-hidden rounded-lg border border-white/80 bg-surface shadow-lg">
                       <img
                         src={project.mobile_image_url}
-                        alt="Mobile"
-                        className="h-full w-full object-contain"
+                        alt=""
+                        className="h-full w-full object-cover object-top"
                       />
-                    ) : (
-                      <Smartphone className="h-5 w-5 text-rule" />
-                    )}
-                    <span className="absolute bottom-1 right-2 text-[8px] font-semibold uppercase tracking-tighter text-muted">Mobile</span>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-2 flex items-center justify-between">
-                    <h3 className="font-serif text-lg font-medium text-ink-deep group-hover:underline group-hover:decoration-gold group-hover:underline-offset-4">
+                    <h3 className="font-serif text-lg font-medium text-ink-deep">
                       {project.title}
                     </h3>
                   </div>
@@ -159,21 +153,21 @@ const ProjectsList: React.FC = () => {
                       {project.technologies.slice(0, 2).map((tech, index) => (
                         <span
                           key={index}
-                          className="rounded-md border border-rule px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted"
+                          className="rounded-full border border-rule px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted"
                         >
                           {tech}
                         </span>
                       ))}
                       {project.technologies.length > 2 && (
-                        <span className="rounded-md border border-rule px-2 py-1 text-[10px] font-semibold text-gold">
+                        <span className="rounded-full border border-rule px-2.5 py-1 text-[10px] font-semibold text-gold">
                           +{project.technologies.length - 2}
                         </span>
                       )}
                     </div>
 
-                    <span className="flex w-full items-center justify-center gap-2 rounded-md bg-ink py-2.5 text-sm font-medium text-paper">
+                    <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-ink py-2.5 text-sm font-medium text-paper transition-colors group-hover:bg-ink-deep">
                       View Details
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                     </span>
                   </div>
                 </div>
@@ -182,7 +176,7 @@ const ProjectsList: React.FC = () => {
           </div>
         )}
 
-        <div className="relative mt-16 overflow-hidden border border-rule bg-ink-deep p-8 text-center text-paper">
+        <div className="panel-dark relative mt-16 overflow-hidden p-8 text-center text-paper">
           <div className="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 opacity-10">
             <Layout size={200} />
           </div>

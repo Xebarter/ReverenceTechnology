@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Star, MessageSquarePlus, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button, Container } from './ui';
 
 interface Testimonial {
@@ -73,7 +74,7 @@ export default function Testimonials({
         </div>
 
         {testimonials.length === 0 ? (
-          <div className="rounded-md border border-dashed border-rule bg-surface px-6 py-12 text-center md:py-20">
+          <div className="rounded-2xl border border-dashed border-rule bg-surface px-6 py-12 text-center md:py-20">
             <User size={40} className="mx-auto mb-4 text-muted/40" />
             <h3 className="mb-2 font-serif text-lg text-ink-deep">No client notes yet</h3>
             <Button onClick={onShowTestimonialForm} className="mt-4">
@@ -83,9 +84,17 @@ export default function Testimonials({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3">
-              {testimonials.slice(0, 6).map((t) => (
-                <article key={t.id} className="flex flex-col bg-surface p-6 md:p-8">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.slice(0, 6).map((t, index) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.55, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full"
+                >
+                  <article className="lift-card flex h-full flex-col p-6 md:p-8">
                   <div className="mb-4 flex gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -105,7 +114,8 @@ export default function Testimonials({
                       {t.company}
                     </p>
                   </div>
-                </article>
+                  </article>
+                </motion.div>
               ))}
             </div>
             <div className="mt-8 text-center">

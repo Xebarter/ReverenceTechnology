@@ -13,7 +13,15 @@ const navLinkClass =
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const scrollToSection = () => {
@@ -76,7 +84,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-rule bg-paper/95 backdrop-blur-sm">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 border-b border-rule bg-paper/90 backdrop-blur-md transition-shadow duration-300 ${
+          scrolled ? 'shadow-[0_10px_30px_-20px_rgba(14,36,54,0.45)]' : 'shadow-none'
+        }`}
+      >
         <Container>
           <nav className="flex h-[4.25rem] items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
@@ -115,12 +127,23 @@ export default function Header() {
 
               <AccountMenu />
 
-              <Button size="sm" onClick={() => navigateToSection('contact')}>
+              {pathname === '/' && (
+                <Link href="/pay" className={buttonClassName('primary', 'sm')}>
+                  Pay
+                </Link>
+              )}
+
+              <Button size="sm" variant={pathname === '/' ? 'secondary' : 'primary'} onClick={() => navigateToSection('contact')}>
                 Get Started
               </Button>
             </div>
 
             <div className="flex items-center gap-1.5 lg:hidden">
+              {pathname === '/' && (
+                <Link href="/pay" className={buttonClassName('primary', 'sm')}>
+                  Pay
+                </Link>
+              )}
               <AccountMenu />
               <button
                 onClick={() => setIsMenuOpen(true)}

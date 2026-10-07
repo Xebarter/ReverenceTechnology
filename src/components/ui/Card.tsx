@@ -10,7 +10,7 @@ export default function Card({
   as?: 'div' | 'article' | 'section' | 'li';
 }) {
   return (
-    <Tag className={`rounded-md border border-rule bg-surface ${className}`}>
+    <Tag className={`rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)] ${className}`}>
       {children}
     </Tag>
   );

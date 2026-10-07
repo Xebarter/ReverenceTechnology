@@ -38,7 +38,7 @@ const faqs = [
       {
         question: 'Can I pay with MTN, Airtel, or a card?',
         answer:
-          'Yes. Mobile money is collected by Paytota (PIN prompt on your phone). Cards go through DPO. Use the number and method on checkout or on your project.',
+          'Yes. Mobile money sends a PIN prompt to your MTN or Airtel number. Cards open a secure payment page. Use the number on checkout or on your project.',
       },
     ],
   },
@@ -338,7 +338,7 @@ export default function FAQ() {
             ))}
           </div>
 
-          <div className="relative hidden overflow-hidden rounded-md bg-ink-deep p-8 text-paper md:block">
+          <div className="panel-dark relative hidden overflow-hidden p-8 text-paper md:block">
             {showCallForm ? (
               <div className="relative z-10">
                 <h3 className="mb-6 font-serif text-2xl font-medium">Schedule a Call</h3>
@@ -401,17 +401,18 @@ export default function FAQ() {
                     <div key={id} className="border-b border-rule">
                       <button
                         onClick={() => setActiveId(isOpen ? null : id)}
-                        className="flex w-full items-center justify-between py-5 text-left"
+                        className="flex w-full items-center justify-between py-5 text-left transition-colors duration-300"
                       >
-                        <span className={`pr-4 font-serif text-lg ${isOpen ? 'text-ink' : 'text-ink-deep'}`}>{item.question}</span>
-                        <ChevronDown size={18} className={`shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-gold' : 'text-muted'}`} />
+                        <span className={`pr-4 font-serif text-lg transition-colors duration-300 ${isOpen ? 'text-ink' : 'text-ink-deep'}`}>{item.question}</span>
+                        <ChevronDown size={18} className={`shrink-0 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180 text-gold' : 'text-muted'}`} />
                       </button>
-                      <AnimatePresence>
+                      <AnimatePresence initial={false}>
                         {isOpen && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                             className="overflow-hidden"
                           >
                             <div className="pb-6 leading-relaxed text-muted">

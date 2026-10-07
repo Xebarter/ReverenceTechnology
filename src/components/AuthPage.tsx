@@ -132,6 +132,7 @@ export default function AuthPage() {
     <div className="relative min-h-[calc(100vh-4.25rem)] bg-paper">
       <div className="grid min-h-[calc(100vh-4.25rem)] lg:grid-cols-2">
         <aside className="relative hidden overflow-hidden bg-ink-deep px-10 py-16 text-paper lg:flex lg:flex-col lg:justify-between xl:px-16 xl:py-20">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_100%_0%,rgb(176_141_87/0.22),transparent_48%)]" />
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
             style={{
@@ -161,7 +162,7 @@ export default function AuthPage() {
           <ul className="relative space-y-5">
             {capabilities.map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-3 text-sm text-paper/80">
-                <span className="flex h-9 w-9 items-center justify-center rounded-md border border-paper/10 bg-paper/5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-paper/10 bg-paper/5">
                   <Icon size={16} className="text-gold" />
                 </span>
                 {label}
@@ -219,7 +220,7 @@ export default function AuthPage() {
             <div className="pt-8">
               {(error || message) && (
                 <div
-                  className={`mb-6 flex items-start gap-3 border px-4 py-3 text-sm ${
+                  className={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
                     error
                       ? 'border-red-200 bg-red-50/80 text-red-800'
                       : 'border-rule bg-paper-2 text-ink'
@@ -234,7 +235,7 @@ export default function AuthPage() {
                 type="button"
                 disabled={busy}
                 onClick={onGoogle}
-                className="flex w-full items-center justify-center gap-3 rounded-md border border-rule bg-surface px-5 py-3 text-sm font-medium text-ink-deep transition-colors hover:border-ink disabled:pointer-events-none disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-rule bg-surface px-5 py-3 text-sm font-medium text-ink-deep shadow-[0_1px_2px_rgb(14_36_54/0.04)] transition-all duration-200 hover:border-gold/50 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
               >
                 <GoogleMark />
                 Continue with Google

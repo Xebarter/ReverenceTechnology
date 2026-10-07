@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 const fieldClass =
-  'w-full rounded-md border border-rule bg-surface px-3.5 py-2.5 text-ink placeholder:text-muted/60 transition-colors duration-200 focus:border-ink focus:ring-1 focus:ring-ink';
+  'w-full rounded-xl border border-rule bg-surface px-3.5 py-2.5 text-ink placeholder:text-muted/60 transition duration-200 focus:border-gold focus:ring-1 focus:ring-gold/40';
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className = '', ...props }, ref) => (

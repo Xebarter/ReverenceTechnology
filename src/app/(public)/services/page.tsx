@@ -35,21 +35,21 @@ export default function ServicesHubPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {SERVICE_PAGES.map((page) => (
             <Link key={page.slug} href={`/services/${page.slug}`} className="group">
-              <Card className="flex h-full flex-col p-8 transition-colors group-hover:border-ink">
+              <Card className="hover-lift flex h-full flex-col p-8">
                 <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
                   {page.eyebrow}
                 </p>
                 <h2 className="mt-4 font-serif text-2xl font-medium tracking-tight text-ink-deep">{page.title}</h2>
                 <p className="mt-3 flex-1 leading-relaxed text-muted">{page.description}</p>
                 <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-ink">
-                  Learn more <ArrowRight size={14} className="text-gold" />
+                  Learn more <ArrowRight size={14} className="text-gold transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
               </Card>
             </Link>
           ))}
         </div>
 
-        <div className="mt-16 border border-rule bg-ink-deep px-8 py-12 text-paper md:px-12">
+        <div className="panel-dark mt-16 px-8 py-12 text-paper md:px-12">
           <h2 className="font-serif text-3xl font-medium tracking-tight">Ready when you are.</h2>
           <p className="mt-3 max-w-xl text-paper/70">
             Brief a project with the outcome you need. We will come back with an approach, a timeline, and a quoted

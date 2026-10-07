@@ -3,6 +3,7 @@ import { FB_SESSION_COOKIE } from '../lib/authCookies';
 import { eq, pgPatch, pgSelect, pgUpsertRow } from './supabasePostgrest';
 import { requireSupabaseService } from './supabaseEnv';
 import { verifyFirebaseIdToken } from './verifyFirebaseIdToken';
+import { claimOrdersForEmail } from './claimOrders';
 
 export type AuthUser = {
   uid: string;
@@ -47,6 +48,8 @@ export async function upsertProfileAndAdmin(user: {
     },
     'id',
   );
+
+  if (email) await claimOrdersForEmail(user.uid, email);
 
   let isAdmin = false;
   if (email) {

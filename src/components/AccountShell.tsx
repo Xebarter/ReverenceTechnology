@@ -106,7 +106,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink-deep text-paper transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink-deep text-paper shadow-[12px_0_40px_-28px_rgb(14_36_54/0.65)] transition-transform duration-300 ease-out ${
           open ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
@@ -135,10 +135,10 @@ export default function AccountShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center border-l-2 px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors duration-200 ${
                   active
-                    ? 'border-gold bg-paper/10 text-paper'
-                    : 'border-transparent text-paper/65 hover:bg-paper/5 hover:text-paper'
+                    ? 'bg-paper/10 text-paper'
+                    : 'text-paper/65 hover:bg-paper/5 hover:text-paper'
                 }`}
               >
                 <Icon className="mr-3 h-4 w-4" />
@@ -151,12 +151,12 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         <div className="space-y-1 border-t border-paper/10 p-3">
           <Link
             href="/dashboard/projects/new"
-            className="flex w-full items-center px-3 py-2.5 text-sm text-paper hover:bg-paper/5"
+            className="flex w-full items-center rounded-xl px-3 py-2.5 text-sm text-paper transition-colors duration-200 hover:bg-paper/5"
           >
             <Plus className="mr-3 h-4 w-4 text-gold" />
             Start a project
           </Link>
-          <Link href="/" className="flex w-full items-center px-3 py-2.5 text-sm text-paper/65 hover:text-paper">
+          <Link href="/" className="flex w-full items-center rounded-xl px-3 py-2.5 text-sm text-paper/65 transition-colors duration-200 hover:bg-paper/5 hover:text-paper">
             Back to site
           </Link>
           <button
@@ -165,7 +165,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
               await signOut();
               window.location.href = '/';
             }}
-            className="flex w-full items-center px-3 py-2.5 text-sm text-paper/65 hover:text-paper"
+            className="flex w-full items-center rounded-xl px-3 py-2.5 text-sm text-paper/65 transition-colors duration-200 hover:bg-paper/5 hover:text-paper"
           >
             <LogOut className="mr-3 h-4 w-4" />
             Sign out

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { eq, pgSelect } from '../../../../server/supabasePostgrest';
+import { paytotaConfigured, purchaseIdFromToken } from '../../../../server/paytotaGateway';
+import { finalizePaytotaByPurchaseId } from '../../../../server/orderPaytota';
 
 export const runtime = 'nodejs';
 
@@ -57,17 +59,25 @@ export async function GET(req: Request) {
   }
 
   const selQ = `${eq('order_number', orderNumber)}&${eq('status_token', token)}`;
-  const { rows, error } = await pgSelect(
-    supabaseUrl,
-    serviceRoleKey,
-    'orders',
-    selQ,
-    'payment_status,payment_reference,order_status',
-  );
+  const fields = 'payment_status,payment_reference,order_status,trans_token';
+  const { rows, error } = await pgSelect(supabaseUrl, serviceRoleKey, 'orders', selQ, fields);
 
   if (error) return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500, headers: baseHeaders });
-  const data = rows[0];
+  let data = rows[0];
   if (!data) return NextResponse.json({ error: 'Order not found' }, { status: 404, headers: baseHeaders });
+
+  if (String(data.payment_status || '') === 'pending' && paytotaConfigured()) {
+    const purchaseId = purchaseIdFromToken(data.trans_token != null ? String(data.trans_token) : null);
+    if (purchaseId) {
+      try {
+        await finalizePaytotaByPurchaseId(supabaseUrl, serviceRoleKey, purchaseId);
+        const again = await pgSelect(supabaseUrl, serviceRoleKey, 'orders', selQ, fields);
+        if (again.rows[0]) data = again.rows[0];
+      } catch (e) {
+        console.error('[mobile-money] order status check failed', e);
+      }
+    }
+  }
 
   const payStatus = data.payment_status != null ? String(data.payment_status) : '';
   const pref =

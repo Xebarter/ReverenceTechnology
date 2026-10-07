@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mobileMoneyWebhookResponse } from '../../../../server/mobileMoneyHttp';
+import { mobileMoneyWebhookResponse } from '../../../../../server/mobileMoneyHttp';
 
 export const runtime = 'nodejs';
 

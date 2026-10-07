@@ -132,7 +132,7 @@ export default function JobApplicationForm({ jobId, jobTitle, onClose, onSubmitS
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-deep/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-md border border-rule bg-surface">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_30px_60px_-36px_rgb(14_36_54/0.55)]">
 
         <div className="flex items-center justify-between border-b border-rule bg-paper px-8 py-6">
           <div>

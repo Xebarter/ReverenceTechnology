@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Monitor, Smartphone, ArrowRight, Search } from 'lucide-react';
+import { Monitor, ArrowRight, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Button, Container } from './ui';
 
@@ -61,7 +62,7 @@ const Projects: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-[320px] animate-pulse border border-rule bg-surface" />
+              <div key={i} className="h-[320px] animate-pulse rounded-2xl border border-rule bg-surface" />
             ))}
           </div>
         </Container>
@@ -76,7 +77,13 @@ const Projects: React.FC = () => {
         .project-card-description strong { font-weight: 600; color: #0E2436; }
       `}</style>
       <Container>
-        <div className="mx-auto mb-16 max-w-2xl text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto mb-16 max-w-2xl text-center"
+        >
           <p className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
             Recent results
           </p>
@@ -86,49 +93,58 @@ const Projects: React.FC = () => {
           <p className="mt-5 text-lg text-muted">
             Three recent builds. Open one if you want to see how we work before you buy.
           </p>
-        </div>
+        </motion.div>
 
         {projects.length === 0 ? (
-          <div className="border border-dashed border-rule py-16 text-center">
+          <div className="rounded-2xl border border-dashed border-rule py-16 text-center">
             <Search className="mx-auto mb-4 h-10 w-10 text-rule" />
             <h3 className="font-serif text-xl text-ink-deep">Portfolio under maintenance</h3>
             <p className="mt-2 text-muted">We are currently updating our latest success stories.</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <article
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project, index) => (
+                <motion.div
                   key={project.id}
-                  className="group flex cursor-pointer flex-col"
-                  onClick={() => handleProjectClick(project.id)}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.6, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full"
                 >
-                  <div className="flex h-48 overflow-hidden border border-rule bg-paper-2">
-                    <div className="relative flex w-2/3 items-center justify-center border-r border-rule bg-surface p-3">
-                      {project.image_url ? (
-                        <img
-                          src={project.image_url}
-                          alt="Desktop"
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <Monitor className="h-6 w-6 text-rule" />
-                      )}
-                    </div>
-                    <div className="relative flex w-1/3 items-center justify-center p-3">
-                      {project.mobile_image_url ? (
+                  <article
+                    className="lift-card group flex h-full cursor-pointer flex-col overflow-hidden"
+                    onClick={() => handleProjectClick(project.id)}
+                  >
+                  <div className="relative flex h-52 items-center justify-center overflow-hidden bg-paper-2 p-4 sm:h-56">
+                    {project.image_url ? (
+                      <img
+                        src={project.image_url}
+                        alt={project.title}
+                        className="h-full w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03]"
+                      />
+                    ) : project.mobile_image_url ? (
+                      <img
+                        src={project.mobile_image_url}
+                        alt={project.title}
+                        className="h-full w-auto object-contain"
+                      />
+                    ) : (
+                      <Monitor className="h-6 w-6 text-rule" />
+                    )}
+                    {project.image_url && project.mobile_image_url && (
+                      <div className="absolute bottom-3 right-3 h-28 w-[4.25rem] overflow-hidden rounded-lg border border-white/80 bg-surface shadow-lg">
                         <img
                           src={project.mobile_image_url}
-                          alt="Mobile"
-                          className="h-full w-full object-contain"
+                          alt=""
+                          className="h-full w-full object-cover object-top"
                         />
-                      ) : (
-                        <Smartphone className="h-5 w-5 text-rule" />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-1 flex-col border border-t-0 border-rule bg-surface p-5">
-                    <h3 className="mb-2 font-serif text-xl text-ink-deep group-hover:underline group-hover:decoration-gold group-hover:underline-offset-4">
+                  <div className="flex flex-1 flex-col p-5 sm:p-6">
+                    <h3 className="mb-2 font-serif text-xl text-ink-deep">
                       {project.title}
                     </h3>
                     <div
@@ -139,22 +155,24 @@ const Projects: React.FC = () => {
                       {project.technologies.slice(0, 2).map((tech, index) => (
                         <span
                           key={index}
-                          className="border border-rule px-2 py-0.5 text-[0.625rem] uppercase tracking-wider text-muted"
+                          className="rounded-full border border-rule px-2.5 py-0.5 text-[0.625rem] uppercase tracking-wider text-muted"
                         >
                           {tech}
                         </span>
                       ))}
                       {project.technologies.length > 2 && (
-                        <span className="border border-rule px-2 py-0.5 text-[0.625rem] text-gold">
+                        <span className="rounded-full border border-rule px-2.5 py-0.5 text-[0.625rem] text-gold">
                           +{project.technologies.length - 2}
                         </span>
                       )}
                     </div>
                     <span className="inline-flex items-center gap-2 text-sm font-medium text-ink">
-                      See how we built this <ArrowRight className="h-3.5 w-3.5" />
+                      See how we built this
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                     </span>
                   </div>
-                </article>
+                  </article>
+                </motion.div>
               ))}
             </div>
 
@@ -166,7 +184,7 @@ const Projects: React.FC = () => {
           </>
         )}
 
-        <div className="mt-20 border border-rule bg-ink-deep px-8 py-12 text-center text-paper">
+        <div className="panel-dark mt-20 px-8 py-14 text-center text-paper">
           <h3 className="font-serif text-2xl md:text-3xl">Need one of these for your business?</h3>
           <p className="mt-2 mb-8 text-paper/70">Pick a package. We send a total and a start date.</p>
           <Button
@@ -174,7 +192,14 @@ const Projects: React.FC = () => {
             className="border-paper/30 text-paper hover:bg-paper hover:text-ink-deep"
             onClick={() => {
               const el = document.getElementById('services');
-              el ? el.scrollIntoView({ behavior: 'smooth' }) : (window.location.hash = 'services');
+              if (!el) {
+                window.location.hash = 'services';
+                return;
+              }
+              const header = document.querySelector('header');
+              const headerHeight = header ? header.offsetHeight : 0;
+              const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+              window.scrollTo({ top, behavior: 'smooth' });
             }}
           >
             Start a project

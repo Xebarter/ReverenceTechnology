@@ -221,7 +221,7 @@ export default function Shop() {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`whitespace-nowrap rounded-md border px-4 py-2.5 text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                   selectedCategory === category
                     ? 'border-ink bg-ink text-paper'
                     : 'border-rule bg-surface text-ink hover:border-ink'
@@ -247,15 +247,18 @@ export default function Shop() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="group cursor-pointer overflow-hidden border border-rule bg-surface"
-                  onClick={() => handleProductClick(product)}
+                  className="h-full"
                 >
+                  <div
+                    className="hover-lift group h-full cursor-pointer overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)]"
+                    onClick={() => handleProductClick(product)}
+                  >
                   <div className="relative aspect-[4/3] overflow-hidden bg-paper-2">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-rule">
@@ -337,6 +340,7 @@ export default function Shop() {
                       </Button>
                     </div>
                   </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -365,15 +369,18 @@ export default function Shop() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.04 }}
-                  className="group cursor-pointer overflow-hidden border border-rule bg-surface"
-                  onClick={() => handleProductClick(product)}
+                  className="h-full"
                 >
+                  <div
+                    className="hover-lift group h-full cursor-pointer overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)]"
+                    onClick={() => handleProductClick(product)}
+                  >
                   <div className="relative aspect-[4/3] overflow-hidden bg-paper-2">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-rule">
@@ -438,6 +445,7 @@ export default function Shop() {
                         Buy Now
                       </Button>
                     </div>
+                  </div>
                   </div>
                 </motion.div>
               ))}

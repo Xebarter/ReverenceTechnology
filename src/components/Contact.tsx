@@ -99,7 +99,7 @@ export default function Contact() {
                   { icon: Mail, title: "Write", detail: "reverencetech1@gmail.com" },
                   { icon: MapPin, title: "Studio", detail: "Mutungo, Zone 1, Kampala, Uganda" },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-center rounded-md border border-rule bg-surface p-4">
+                  <div key={idx} className="flex items-center rounded-xl border border-rule bg-surface p-4 transition-colors duration-300 hover:border-gold/40">
                     <div className="mr-4 text-gold">
                       <item.icon size={20} />
                     </div>
@@ -111,7 +111,7 @@ export default function Contact() {
                 ))}
               </div>
 
-              <div className="relative overflow-hidden rounded-md bg-ink-deep p-8 text-paper">
+              <div className="panel-dark relative overflow-hidden p-8 text-paper">
                 <ShieldCheck className="absolute -bottom-4 -right-4 text-paper/5" size={160} />
                 <div className="relative z-10">
                   <div className="mb-4 flex items-center gap-2 text-gold">
@@ -155,7 +155,7 @@ export default function Contact() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative rounded-md border border-rule bg-surface p-8 md:p-12"
+              className="relative rounded-2xl border border-rule bg-surface p-8 shadow-[0_24px_50px_-36px_rgb(14_36_54/0.45)] md:p-12"
             >
               <AnimatePresence mode="wait">
                 {submitted ? (

@@ -50,7 +50,7 @@ export default function Blog() {
   }, []);
 
   const SkeletonCard = () => (
-    <div className="animate-pulse border border-rule bg-surface p-4">
+    <div className="animate-pulse rounded-2xl border border-rule bg-surface p-4">
       <div className="mb-4 h-52 bg-paper-2" />
       <div className="mb-4 h-4 w-1/4 bg-paper-2" />
       <div className="mb-2 h-6 w-3/4 bg-paper-2" />
@@ -80,14 +80,16 @@ export default function Blog() {
         ) : (
           <div className="space-y-12">
             {posts[0] && (
-              <motion.article
+              <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group flex flex-col overflow-hidden border border-rule bg-surface lg:flex-row"
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full"
               >
+                <article className="hover-lift group flex h-full flex-col overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)] lg:flex-row">
                 <div className="h-[320px] overflow-hidden border-b border-rule bg-paper-2 lg:h-auto lg:w-3/5 lg:border-b-0 lg:border-r">
                   {posts[0].cover_image_url ? (
-                    <img src={posts[0].cover_image_url} alt={posts[0].title} className="h-full w-full object-cover" />
+                    <img src={posts[0].cover_image_url} alt={posts[0].title} className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-rule"><BookOpen size={48} /></div>
                   )}
@@ -115,29 +117,31 @@ export default function Blog() {
                       {posts[0].author}
                     </div>
                     <Link href={`/blog/${posts[0].slug}`} className="flex items-center gap-1 text-sm font-medium text-ink underline decoration-gold underline-offset-4">
-                      Read Article <ArrowRight size={16} />
+                      Read Article <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
                     </Link>
                   </div>
                 </div>
-              </motion.article>
+                </article>
+              </motion.div>
             )}
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {posts.slice(1).map((post, idx) => (
-                <motion.article
+                <motion.div
                   key={post.id}
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.08 }}
-                  className="group overflow-hidden border border-rule bg-surface"
+                  transition={{ duration: 0.55, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full"
                 >
+                  <article className="hover-lift group h-full overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)]">
                   <div className="relative h-52 overflow-hidden bg-paper-2">
                     <div className="absolute left-4 top-4 z-10">
                       <Badge>{post.category?.name || 'Insight'}</Badge>
                     </div>
                     {post.cover_image_url ? (
-                      <img src={post.cover_image_url} alt={post.title} className="h-full w-full object-cover" />
+                      <img src={post.cover_image_url} alt={post.title} className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-rule"><Tag size={32} /></div>
                     )}
@@ -158,12 +162,13 @@ export default function Blog() {
                       <span className="flex items-center gap-1 text-xs text-muted">
                         <User size={12} /> {post.author}
                       </span>
-                      <Link href={`/blog/${post.slug}`} className="flex h-8 w-8 items-center justify-center border border-rule text-ink hover:bg-paper">
+                      <Link href={`/blog/${post.slug}`} className="flex h-8 w-8 items-center justify-center rounded-full border border-rule text-ink transition-colors hover:bg-ink hover:text-paper">
                         <ArrowRight size={16} />
                       </Link>
                     </div>
                   </div>
-                </motion.article>
+                  </article>
+                </motion.div>
               ))}
             </div>
           </div>

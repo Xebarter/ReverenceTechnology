@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MotionConfig } from 'framer-motion';
 import Hero from './Hero';
 import About from './About';
 import Services from './Services';
@@ -14,7 +15,7 @@ export default function HomePage() {
   const [isTestimonialFormOpen, setIsTestimonialFormOpen] = useState(false);
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Hero />
       <Projects />
       <Services />
@@ -23,6 +24,6 @@ export default function HomePage() {
       <SubmitTestimonial isOpen={isTestimonialFormOpen} onClose={() => setIsTestimonialFormOpen(false)} />
       <FAQ />
       <Contact />
-    </>
+    </MotionConfig>
   );
 }

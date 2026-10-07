@@ -180,7 +180,6 @@ export default function Checkout({ onClose }: CheckoutProps) {
           orderNumber?: string;
           statusToken?: string;
           hostedCheckoutUrl?: string;
-          mobileMoneyCheckoutUrl?: string;
           awaitingPhonePrompt?: boolean;
           error?: string;
         } | null;
@@ -201,11 +200,7 @@ export default function Checkout({ onClose }: CheckoutProps) {
           window.location.href = `/payment-result?order=${encodeURIComponent(json.orderNumber)}&t=${encodeURIComponent(json.statusToken)}&mm=1`;
           return;
         }
-        if (json?.mobileMoneyCheckoutUrl) {
-          window.location.href = json.mobileMoneyCheckoutUrl;
-          return;
-        }
-        throw new Error('Mobile money checkout could not be started. Please try again or pay by card.');
+        throw new Error('Could not send the payment prompt. Check the number and try again.');
       }
 
       const { data, error: insertError } = await adminSupabase

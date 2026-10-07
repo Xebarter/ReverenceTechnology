@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { authErrorResponse, requireFirebaseUser } from '../../../../../server/requireAuth';
+import { AuthError, authErrorResponse, requireFirebaseUser } from '../../../../../server/requireAuth';
 import { eq, pgInsertRow, pgSelect } from '../../../../../server/supabasePostgrest';
 import { requireSupabaseService } from '../../../../../server/supabaseEnv';
 import { hostedCheckoutConfigured } from '../../../../../server/hostedCheckoutGateway';
 import { attachHostedCheckoutToInstallment } from '../../../../../server/orderHostedCheckout';
-import { paytotaConfigured } from '../../../../../server/paytotaGateway';
+import { paytotaConfigured, publicPaymentError, requireUgMobile } from '../../../../../server/paytotaGateway';
 import { attachPaytotaToInstallment } from '../../../../../server/orderPaytota';
 import { mapClientProject, remainingBalance } from '../../../../../server/clientProjects';
 
@@ -26,6 +26,7 @@ export async function POST(req: Request, context: RouteContext) {
       installmentId?: string;
       kind?: 'balance' | 'installment';
       method?: 'card' | 'mobile_money';
+      phone?: string;
     } | null;
 
     const { url, serviceKey } = requireSupabaseService();
@@ -110,7 +111,17 @@ export async function POST(req: Request, context: RouteContext) {
     }
 
     if (!paytotaConfigured()) {
-      return NextResponse.json({ error: 'Mobile money checkout is not configured' }, { status: 503 });
+      return NextResponse.json({ error: 'Mobile money is not available right now.' }, { status: 503 });
+    }
+
+    let phone = '';
+    try {
+      phone = requireUgMobile(body?.phone || project.customer_phone || '');
+    } catch (e) {
+      return NextResponse.json(
+        { error: publicPaymentError(e, 'Enter a valid Uganda mobile number (MTN or Airtel).') },
+        { status: 400 },
+      );
     }
 
     const mm = await attachPaytotaToInstallment({
@@ -121,17 +132,22 @@ export async function POST(req: Request, context: RouteContext) {
       reference: `inst:${installmentId}`,
       customerName: project.customer_name || user.name || user.email || 'Customer',
       customerEmail: project.customer_email || user.email || '',
-      customerPhone: project.customer_phone,
+      customerPhone: phone,
       productName: `${kind === 'balance' ? 'Balance' : 'Installment'} · ${project.title}`.slice(0, 120),
     });
 
     return NextResponse.json({
       installmentId,
-      checkoutUrl: mm.checkoutUrl,
       awaitingPhonePrompt: mm.stkSent,
     });
   } catch (e) {
-    const { body, status } = authErrorResponse(e);
-    return NextResponse.json(body, { status });
+    if (e instanceof AuthError) {
+      const { body, status } = authErrorResponse(e);
+      return NextResponse.json(body, { status });
+    }
+    console.error('[mobile-money] project pay failed', e);
+    const message = publicPaymentError(e, 'Could not send the payment prompt. Check the number and try again.');
+    const status = /valid Uganda|receive the prompt|not available/i.test(message) ? 400 : 502;
+    return NextResponse.json({ error: message }, { status });
   }
 }

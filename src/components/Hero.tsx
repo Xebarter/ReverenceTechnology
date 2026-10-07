@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowRight, BadgeCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Button, Container } from './ui';
 
@@ -109,7 +109,12 @@ export default function Hero() {
   }, [heroImages.length]);
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const element = document.getElementById(id);
+    if (!element) return;
+    const header = document.querySelector('header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const top = element.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+    window.scrollTo({ top, behavior: 'smooth' });
   };
 
   const stats = [
@@ -118,39 +123,46 @@ export default function Hero() {
     { value: '50+', label: 'Products shipped' },
   ];
 
+  const ease = [0.22, 1, 0.36, 1] as const;
+
   return (
     <section id="home" className="relative overflow-hidden bg-paper">
-      <Container className="relative z-10 py-10 sm:py-16 md:py-28">
-        <div className="grid grid-cols-1 items-center gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-20">
-          <div className="order-2 space-y-6 sm:space-y-8 lg:order-1">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 top-0 h-[26rem] w-[26rem] rounded-full bg-gold/10 blur-3xl" />
+        <div className="absolute -right-16 top-24 h-[22rem] w-[22rem] rounded-full bg-ink/[0.05] blur-3xl" />
+      </div>
+
+      <Container className="relative z-10 py-12 sm:py-16 md:py-24">
+        <div className="grid grid-cols-1 items-center gap-10 sm:gap-14 lg:grid-cols-2 lg:gap-20">
+          <div className="space-y-6 sm:space-y-8">
             <motion.p
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.6, ease }}
               className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold"
             >
               Kampala studio · East Africa delivery
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.08 }}
+              transition={{ duration: 0.7, delay: 0.08, ease }}
             >
-              <h1 className="font-serif text-[2rem] font-medium leading-[1.15] tracking-tight text-ink-deep sm:text-5xl xl:text-6xl">
+              <h1 className="font-serif text-[2.15rem] font-medium leading-[1.12] tracking-tight text-ink-deep sm:text-5xl xl:text-[3.5rem]">
                 Software, sites, and apps that take payment and get used
               </h1>
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted sm:mt-5 sm:text-lg">
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
                 We build the product, quote a total, and collect MTN, Airtel, or card as work lands.
                 You own the code.
               </p>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.16 }}
-              className="flex flex-col gap-3 pt-1 sm:flex-row"
+              transition={{ duration: 0.6, delay: 0.16, ease }}
+              className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center"
             >
               <Button size="lg" onClick={() => scrollToSection('services')}>
                 Start a project
@@ -166,35 +178,41 @@ export default function Hero() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.12 }}
-            className="relative order-1 w-full lg:order-2 lg:mx-auto lg:max-w-none"
+            transition={{ duration: 0.8, delay: 0.12, ease }}
+            className="relative w-full"
           >
-            <div className="relative aspect-[16/10] overflow-hidden border border-rule bg-paper-2 sm:aspect-[4/3] lg:aspect-[4/5]">
-              <AnimatePresence mode="wait">
-                {heroImages.length > 0 && (
+            <div className="hero-frame relative aspect-[16/10] overflow-hidden border border-rule bg-ink-deep sm:aspect-[4/3] lg:aspect-[4/5]">
+              {heroImages.length === 0 && <div className="absolute inset-0 animate-pulse bg-paper-2" />}
+              {heroImages.map((image, index) => {
+                const active = index === currentImageIndex;
+                return (
                   <motion.img
-                    key={heroImages[currentImageIndex].id}
-                    src={getOptimizedImageUrl(heroImages[currentImageIndex].image_url, 768)}
-                    srcSet={getHeroSrcSet(heroImages[currentImageIndex].image_url)}
+                    key={image.id}
+                    src={getOptimizedImageUrl(image.image_url, 768)}
+                    srcSet={getHeroSrcSet(image.image_url)}
                     sizes="(max-width: 640px) 100vw, (max-width: 1023px) 90vw, 42vw"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.7, ease: 'easeInOut' }}
+                    initial={false}
+                    animate={{ opacity: active ? 1 : 0, scale: active ? 1.06 : 1 }}
+                    transition={{
+                      opacity: { duration: 1.05, ease },
+                      scale: { duration: 6.5, ease: 'linear' },
+                    }}
                     className="absolute inset-0 h-full w-full object-cover object-center"
+                    style={{ zIndex: active ? 1 : 0 }}
                     alt={
-                      heroImages[currentImageIndex].title?.trim() ||
+                      image.title?.trim() ||
                       'Web design and software development in Kampala Uganda – Reverence Technology'
                     }
                     width={768}
                     height={480}
                     decoding="async"
-                    fetchPriority="high"
+                    fetchPriority={index === 0 ? 'high' : 'low'}
+                    aria-hidden={!active}
                     onError={(e) => {
                       const img = e.currentTarget;
-                      const original = heroImages[currentImageIndex]?.image_url;
+                      const original = image.image_url;
                       if (original && img.src !== original && img.src !== FALLBACK_IMAGE) {
                         img.src = original;
                         img.removeAttribute('srcset');
@@ -204,42 +222,47 @@ export default function Hero() {
                       }
                     }}
                   />
-                )}
-              </AnimatePresence>
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between gap-2 border-t border-rule bg-surface/95 px-3 py-2.5 sm:px-4 sm:py-3">
-                <span className="flex min-w-0 items-center gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-ink sm:text-[0.6875rem]">
-                  <BadgeCheck size={14} className="flex-shrink-0 text-gold" />
-                  <span className="truncate">Kampala studio</span>
-                </span>
-                <span className="flex-shrink-0 text-[0.625rem] uppercase tracking-[0.14em] text-muted sm:text-[0.6875rem]">
-                  East Africa
-                </span>
+                );
+              })}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-ink-deep/80 via-ink-deep/30 to-transparent px-4 pb-4 pt-16">
+                <div className="flex items-center justify-between gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-paper sm:text-[0.6875rem]">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BadgeCheck size={14} className="flex-shrink-0 text-gold" />
+                    <span className="truncate">Kampala studio</span>
+                  </span>
+                  <span className="flex-shrink-0 text-paper/75">East Africa</span>
+                </div>
               </div>
             </div>
             {heroImages.length > 1 && (
-              <div className="mt-3 flex items-center justify-center gap-1.5 lg:hidden">
-                {heroImages.map((image, index) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`h-1 rounded-full transition-all ${
-                      index === currentImageIndex ? 'w-6 bg-ink' : 'w-2 bg-rule'
-                    }`}
-                    aria-label={`Show image ${index + 1}`}
-                  />
-                ))}
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {heroImages.map((image, index) => (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`h-1 rounded-full transition-all duration-500 ${
+                        index === currentImageIndex ? 'w-7 bg-ink' : 'w-2 bg-rule hover:bg-gold'
+                      }`}
+                      aria-label={`Show image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[0.6875rem] tabular-nums tracking-[0.16em] text-muted">
+                  {String(currentImageIndex + 1).padStart(2, '0')} / {String(heroImages.length).padStart(2, '0')}
+                </span>
               </div>
             )}
           </motion.div>
         </div>
       </Container>
 
-      <div className="relative z-10 border-t border-rule bg-surface">
-        <Container className="py-6 sm:py-8">
-          <div className="grid grid-cols-3 gap-4 border-b border-rule pb-6 sm:gap-8 sm:pb-8">
+      <div className="relative z-10 border-t border-rule bg-surface/80">
+        <Container>
+          <div className="grid grid-cols-3 divide-x divide-rule">
             {stats.map(({ value, label }) => (
-              <div key={label}>
+              <div key={label} className="px-3 py-7 sm:px-8 sm:py-9">
                 <div className="font-serif text-2xl text-ink-deep sm:text-3xl">{value}</div>
                 <div className="mt-1 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted sm:text-[0.6875rem]">
                   {label}
@@ -247,17 +270,21 @@ export default function Hero() {
               </div>
             ))}
           </div>
-          {quote && (
-            <p className="mt-6 max-w-3xl font-serif text-base italic leading-relaxed text-ink-deep sm:text-lg">
-              “{quote.content}”
-              <span className="mt-2 block font-sans text-sm not-italic text-muted">
-                {quote.name}
-                {quote.company ? ` · ${quote.company}` : ''}
-              </span>
-            </p>
-          )}
         </Container>
       </div>
+      {quote && (
+        <Container className="relative z-10 py-10 sm:py-12">
+          <blockquote className="max-w-3xl border-l-2 border-gold pl-5 sm:pl-6">
+            <p className="line-clamp-4 font-serif text-lg italic leading-relaxed text-ink-deep sm:text-xl">
+              “{quote.content}”
+            </p>
+            <footer className="mt-3 text-sm text-muted">
+              {quote.name}
+              {quote.company ? ` · ${quote.company}` : ''}
+            </footer>
+          </blockquote>
+        </Container>
+      )}
     </section>
   );
 }

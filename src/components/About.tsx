@@ -59,7 +59,8 @@ export default function About() {
           </motion.p>
         </div>
 
-        <div className="mb-20 grid grid-cols-1 border-y border-rule sm:grid-cols-3">
+        <div className="mb-16 overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_2px_rgb(14_36_54/0.04)] sm:mb-20">
+          <div className="grid grid-cols-1 sm:grid-cols-3">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -76,9 +77,10 @@ export default function About() {
               </p>
             </motion.div>
           ))}
+          </div>
         </div>
 
-        <div className="border border-rule bg-ink-deep px-8 py-14 text-paper md:px-16 md:py-20">
+        <div className="panel-dark px-8 py-14 text-paper md:px-16 md:py-20">
           <p className="mb-4 text-center text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">
             The deal
           </p>

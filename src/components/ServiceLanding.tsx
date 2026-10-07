@@ -35,7 +35,7 @@ export default function ServiceLanding({ page }: { page: ServicePage }) {
           {page.faqs.map((faq) => (
             <details
               key={faq.question}
-              className="group border border-rule bg-surface px-6 py-4 open:bg-paper"
+              className="group rounded-2xl border border-rule bg-surface px-6 py-4 shadow-[0_1px_2px_rgb(14_36_54/0.04)] transition-colors open:bg-paper"
             >
               <summary className="cursor-pointer list-none font-medium text-ink-deep [&::-webkit-details-marker]:hidden">
                 <span className="flex items-center justify-between gap-4">
@@ -63,14 +63,14 @@ export default function ServiceLanding({ page }: { page: ServicePage }) {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {related.map((item) => (
               <Link key={item.slug} href={`/services/${item.slug}`} className="group">
-                <Card className="h-full p-7 transition-colors group-hover:border-ink">
+                <Card className="hover-lift h-full p-7">
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gold">
                     {item.eyebrow}
                   </p>
                   <h3 className="mt-3 font-serif text-xl font-medium text-ink-deep">{item.title}</h3>
                   <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted">{item.description}</p>
                   <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-ink">
-                    View service <ArrowRight size={14} className="text-gold" />
+                    View service <ArrowRight size={14} className="text-gold transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
                 </Card>
               </Link>
@@ -80,7 +80,7 @@ export default function ServiceLanding({ page }: { page: ServicePage }) {
       )}
 
       <Container>
-        <div className="border border-rule bg-ink-deep px-8 py-14 text-paper md:px-16 md:py-20">
+        <div className="panel-dark px-8 py-14 text-paper md:px-16 md:py-20">
           <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-gold">Start a project</p>
           <h2 className="mt-4 max-w-2xl font-serif text-3xl font-medium tracking-tight md:text-4xl">
             Tell us what you need built.
