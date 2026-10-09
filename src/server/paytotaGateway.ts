@@ -85,6 +85,19 @@ export function requireUgMobile(phone: string): string {
   return n;
 }
 
+/** Paytota executes Uganda payouts on a network path, with a network-specific phone format. */
+export function ugPayoutTarget(phone256: string): { network: 'airtel' | 'mtnmomo'; phone: string } {
+  const national = phone256.replace(/^256/, '');
+  const prefix = national.slice(0, 2);
+  if (prefix === '70' || prefix === '74' || prefix === '75') {
+    return { network: 'airtel', phone: national };
+  }
+  if (prefix === '76' || prefix === '77' || prefix === '78' || prefix === '79' || prefix === '31' || prefix === '39') {
+    return { network: 'mtnmomo', phone: phone256 };
+  }
+  throw new Error('Enter an MTN or Airtel number. Paytota sends each payout to one of those networks.');
+}
+
 export function mapPaytotaStatus(status: string | null | undefined): PaytotaPaymentStatus {
   const s = (status || '').toLowerCase();
   if (s === 'paid') return 'paid';
@@ -245,12 +258,29 @@ function money(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function collectGatewayText(value: unknown, parts: string[], depth = 0): void {
+  if (depth > 4 || parts.length >= 4) return;
+  if (typeof value === 'string') {
+    const text = value.replace(/\s+/g, ' ').trim();
+    if (text && !/<\s*html|<\s*!doctype/i.test(text) && !/^[a-z0-9_]+$/.test(text)) parts.push(text);
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectGatewayText(item, parts, depth + 1);
+    return;
+  }
+  const record = asRecord(value);
+  if (!record) return;
+  for (const key of ['message', 'detail', 'error']) collectGatewayText(record[key], parts, depth + 1);
+  for (const nested of Object.values(record)) collectGatewayText(nested, parts, depth + 1);
+}
+
 function adminGatewayMessage(data: unknown, fallback: string): string {
-  const obj = asRecord(data);
-  const nested = asRecord(obj?.error);
-  const nestedMessage = nested?.message;
-  if (typeof nestedMessage === 'string' && nestedMessage.trim()) return nestedMessage.trim().slice(0, 240);
-  return customerGatewayMessage(data, fallback);
+  const parts: string[] = [];
+  collectGatewayText(data, parts);
+  const unique = [...new Set(parts.map((part) => part.replace(/paytota/gi, '').replace(/\s+/g, ' ').trim()).filter(Boolean))];
+  if (!unique.length) return fallback;
+  return unique.slice(0, 2).join(' ').slice(0, 240);
 }
 
 async function paytotaAdminJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -391,11 +421,30 @@ function assertPaytotaExecutionUrl(raw: string): string {
   return url.toString();
 }
 
+export async function executePaytotaMobilePayout(
+  executionUrl: string,
+  phone256: string,
+): Promise<{ status: PaytotaPayoutStatus; message: string | null }> {
+  const url = assertPaytotaExecutionUrl(executionUrl);
+  const method = new URL(url).pathname.replace(/\/+$/, '').split('/').pop() || '';
+  if (method === 'airtel' || method === 'mtnmomo') {
+    return readPayoutExecution(url, { phone: ugPayoutTarget(phone256).phone });
+  }
+  return readPayoutExecution(url, { payout_type: 'mobile' });
+}
+
 export async function executePaytotaPayout(
   executionUrl: string,
   payload: Record<string, string>,
 ): Promise<{ status: PaytotaPayoutStatus; message: string | null }> {
-  const res = await fetch(assertPaytotaExecutionUrl(executionUrl), {
+  return readPayoutExecution(assertPaytotaExecutionUrl(executionUrl), payload);
+}
+
+async function readPayoutExecution(
+  url: string,
+  payload: Record<string, string>,
+): Promise<{ status: PaytotaPayoutStatus; message: string | null }> {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),
@@ -412,12 +461,13 @@ export async function executePaytotaPayout(
   const details = asRecord(body?.details);
   const transaction = asRecord(details?.transaction);
   const txStatus = String(transaction?.status || '').toLowerCase();
-  const detail = typeof details?.message === 'string' ? details.message.trim() : '';
+  const detailField = typeof body?.detail === 'string' ? body.detail.trim() : '';
+  const detail = typeof details?.message === 'string' ? details.message.trim() : detailField;
   const failed = !res.ok || status === 'error' || txStatus === 'failed' || txStatus === 'error';
   if (failed) {
     throw new Error(detail || adminGatewayMessage(data, 'Paytota could not send this disbursement.'));
   }
-  if (status === 'pending' || status === 'success' || String(details?.return_code || '') === '200') {
+  if (status === 'pending' || status === 'success' || detail.toLowerCase() === 'pending' || String(details?.return_code || '') === '200') {
     return { status: status === 'success' ? 'success' : 'pending', message: null };
   }
   throw new Error(detail || 'Paytota could not send this disbursement.');

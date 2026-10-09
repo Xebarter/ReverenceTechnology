@@ -3,6 +3,7 @@ import { AuthError, authErrorResponse } from './requireAuth';
 import { eq, pgInsertRow, pgPatch, pgSelect } from './supabasePostgrest';
 import {
   createPaytotaPayout,
+  executePaytotaMobilePayout,
   executePaytotaPayout,
   getPaytotaAccountBalance,
   getPaytotaPayout,
@@ -10,6 +11,7 @@ import {
   payoutFailureMessage,
   paytotaConfigured,
   requireUgMobile,
+  ugPayoutTarget,
   type PaytotaPayoutStatus,
 } from './paytotaGateway';
 
@@ -104,7 +106,8 @@ async function syncFromPaytota(url: string, serviceKey: string, row: Disbursemen
   try {
     const remote = await getPaytotaPayout(row.paytota_id);
     const status = mapPaytotaPayoutStatus(remote.status, remote.event_type);
-    const failure = status === 'error' ? payoutFailureMessage(remote) || row.failure_message : null;
+  const failure =
+    status === 'error' ? explainPayoutFailure(payoutFailureMessage(remote) || row.failure_message, row.recipient_phone) : null;
     if (status === row.status && failure === row.failure_message) return row;
     const saved = await patchDisbursement(url, serviceKey, row.id, {
       status,
@@ -149,7 +152,8 @@ export async function refreshDisbursement(
   if (!row.paytota_id) return row;
   const remote = await getPaytotaPayout(row.paytota_id);
   const status = mapPaytotaPayoutStatus(remote.status, remote.event_type);
-  const failure = status === 'error' ? payoutFailureMessage(remote) || row.failure_message : null;
+  const failure =
+    status === 'error' ? explainPayoutFailure(payoutFailureMessage(remote) || row.failure_message, row.recipient_phone) : null;
   return (
     (await patchDisbursement(url, serviceKey, row.id, {
       status,
@@ -176,6 +180,22 @@ function clean(value: string | undefined): string {
   return (value || '').trim();
 }
 
+function explainPayoutFailure(message: string | null, phone256?: string): string {
+  const text = (message || '').replace(/\s+/g, ' ').trim();
+  const generic = !text || /unrecognized transaction/i.test(text) || /^failed\.?\s*\.?$/i.test(text);
+  if (!generic) return text;
+  let network = 'The mobile network';
+  if (phone256) {
+    try {
+      network = ugPayoutTarget(phone256).network === 'airtel' ? 'Airtel' : 'MTN';
+    } catch {
+      network = 'The mobile network';
+    }
+  }
+  const wallet = network === 'The mobile network' ? 'mobile money' : network;
+  return `${network} received the payout and returned FAILED without a reference. Paytota has to enable ${wallet} disbursements on this account before a send can complete.`;
+}
+
 export async function createDisbursement(
   url: string,
   serviceKey: string,
@@ -187,6 +207,7 @@ export async function createDisbursement(
   const recipientName = clean(input.recipientName).slice(0, 120);
   const recipientEmail = clean(input.recipientEmail).toLowerCase();
   const recipientPhone = requireUgMobile(input.recipientPhone);
+  if (input.payoutType === 'mobile') ugPayoutTarget(recipientPhone);
   if (!description) throw new Error('Add a short description for this disbursement.');
   if (!recipientName) throw new Error('Enter the recipient name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) throw new Error('Enter a valid recipient email.');
@@ -238,7 +259,7 @@ export async function createDisbursement(
     const payout = await createPaytotaPayout({
       email: recipientEmail,
       phone: recipientPhone,
-      fullName: recipientName,
+      fullName: input.payoutType === 'bank' ? recipientName : undefined,
       bankAccount: input.payoutType === 'bank' ? bankAccountNumber : undefined,
       amount,
       description,
@@ -250,17 +271,16 @@ export async function createDisbursement(
     });
     if (!payout.execution_url) throw new Error('Paytota did not return a payout execution URL.');
 
-    const payload =
+    const executed =
       input.payoutType === 'bank'
-        ? {
+        ? await executePaytotaPayout(payout.execution_url, {
             payout_type: 'bank',
             bank_name: bankName,
             bank_code: bankCode,
             bank_account_name: bankAccountName,
             bank_account_number: bankAccountNumber,
-          }
-        : { payout_type: 'mobile' };
-    const executed = await executePaytotaPayout(payout.execution_url, payload);
+          })
+        : await executePaytotaMobilePayout(payout.execution_url, recipientPhone);
     let status = executed.status;
     let failure: string | null = null;
     if (status !== 'success') {
@@ -273,7 +293,7 @@ export async function createDisbursement(
       }
     }
     if (status === 'error') {
-      throw new Error(failure || 'The mobile network rejected this disbursement.');
+      throw new Error(explainPayoutFailure(failure, recipientPhone));
     }
     const saved = await patchDisbursement(url, serviceKey, created.id, {
       status,
@@ -281,7 +301,8 @@ export async function createDisbursement(
     });
     return saved || { ...created, paytota_id: payout.id, status };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Paytota could not send this disbursement.';
+    const raw = error instanceof Error ? error.message : 'Paytota could not send this disbursement.';
+    const message = input.payoutType === 'mobile' ? explainPayoutFailure(raw, recipientPhone) : raw;
     const saved = await patchDisbursement(url, serviceKey, created.id, {
       status: 'error',
       failure_message: message,

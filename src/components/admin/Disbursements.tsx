@@ -367,7 +367,7 @@ export default function AdminDisbursements() {
                   id="recipient_phone"
                   value={form.recipient_phone}
                   onChange={(e) => patchForm({ recipient_phone: e.target.value })}
-                  placeholder="07…"
+                  placeholder="MTN or Airtel, 07…"
                   required
                 />
               </div>
