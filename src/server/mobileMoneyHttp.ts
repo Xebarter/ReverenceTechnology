@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPublicAppBaseUrl } from './appBaseUrl';
-import { parsePaytotaWebhook, verifyPaytotaWebhookSignature } from './paytotaGateway';
+import { parsePaytotaPayoutWebhook, parsePaytotaWebhook, verifyPaytotaWebhookSignature } from './paytotaGateway';
+import { applyPaytotaPayoutWebhook } from './disbursements';
 import { finalizePaytotaByOurReference, finalizePaytotaByPurchaseId } from './orderPaytota';
 
 function resolvePublicBase(req: Request): string {
@@ -71,15 +72,23 @@ export async function mobileMoneyWebhookResponse(req: Request): Promise<NextResp
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const parsed = parsePaytotaWebhook(body);
-  if (!parsed.purchaseId) {
-    return NextResponse.json({ ok: true, ignored: true }, { status: 200 });
-  }
-
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) {
     return NextResponse.json({ error: 'Server is not configured' }, { status: 500 });
+  }
+
+  const payout = parsePaytotaPayoutWebhook(body);
+  if (payout.isPayout) {
+    if (payout.payoutId || payout.reference) {
+      await applyPaytotaPayoutWebhook(supabaseUrl, serviceRoleKey, payout);
+    }
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  const parsed = parsePaytotaWebhook(body);
+  if (!parsed.purchaseId) {
+    return NextResponse.json({ ok: true, ignored: true }, { status: 200 });
   }
 
   await finalizePaytotaByPurchaseId(

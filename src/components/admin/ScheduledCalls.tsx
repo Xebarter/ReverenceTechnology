@@ -172,13 +172,30 @@ export default function ScheduledCalls() {
         </div>
 
         {/* Right: Detailed View Content */}
-        <div className="lg:col-span-8 h-full">
+        {selectedCall && (
+          <button
+            type="button"
+            className="fixed inset-0 z-20 bg-ink-deep/40 lg:hidden"
+            aria-label="Close call"
+            onClick={() => setSelectedCall(null)}
+          />
+        )}
+        <div className={`${selectedCall ? 'fixed inset-x-0 bottom-0 z-30 max-h-[90dvh] overflow-y-auto lg:static lg:z-auto lg:col-span-8 lg:max-h-none lg:overflow-visible' : 'hidden lg:col-span-8 lg:block lg:h-full'}`}>
           {selectedCall ? (
-            <div className="bg-surface border border-rule h-full flex flex-col overflow-hidden">
+            <div className="flex h-full flex-col overflow-hidden rounded-t-3xl border border-rule bg-surface lg:rounded-none">
+              <div className="flex justify-end border-b border-rule px-4 py-3 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCall(null)}
+                  className="rounded-full border border-rule px-3 py-1.5 text-sm text-ink"
+                >
+                  Close
+                </button>
+              </div>
               {/* Detail Header */}
-              <div className="p-8 border-b bg-surface flex justify-between items-start">
+              <div className="flex items-start justify-between gap-3 border-b bg-surface p-4 sm:p-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-ink-deep tracking-tight">
+                  <h2 className="text-2xl font-bold tracking-tight text-ink-deep sm:text-3xl">
                     {selectedCall.full_name}
                   </h2>
                   <div className="flex flex-wrap gap-5 mt-4">
@@ -206,7 +223,7 @@ export default function ScheduledCalls() {
               </div>
 
               {/* Detail Body */}
-              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 flex-1 overflow-y-auto">
+              <div className="grid flex-1 grid-cols-1 gap-8 overflow-y-auto p-4 md:grid-cols-2 md:gap-10 sm:p-8">
                 <div className="space-y-8">
                   <section>
                     <h4 className="text-xs font-bold text-muted uppercase tracking-widest mb-4">Request Overview</h4>
@@ -261,7 +278,7 @@ export default function ScheduledCalls() {
               </div>
 
               {/* Status Actions Footer */}
-              <div className="p-8 border-t bg-paper/50 flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 border-t bg-paper/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-8">
                 <button
                   onClick={() => handleUpdate(selectedCall.id, { status: 'new' })}
                   className="flex-1 min-w-[140px] px-4 py-3 text-sm font-bold border border-rule bg-surface hover:bg-paper text-muted transition-all flex items-center justify-center gap-2"

@@ -198,7 +198,7 @@ export default function Orders() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <div className="bg-surface p-6 border border-rule">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted">Total Orders</div>
@@ -438,11 +438,11 @@ export default function Orders() {
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="border border-rule bg-surface max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            className="max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-t-3xl border border-rule bg-surface sm:rounded-none"
           >
             <div className="p-6 border-b border-rule">
               <h2 className="text-2xl font-bold text-ink-deep">Edit Order: {selectedOrder.order_number}</h2>

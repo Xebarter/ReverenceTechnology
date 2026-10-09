@@ -211,7 +211,7 @@ export default function Deposits() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <div className="bg-surface p-6 border border-rule">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted">Total Deposits</div>
@@ -262,12 +262,12 @@ export default function Deposits() {
               className="w-full pl-10 pr-4 py-2 border border-rule rounded-lg focus:outline-none focus:ring-1 focus:border-ink focus:ring-1 focus:ring-ink"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">
             {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${ statusFilter === status ? 'bg-ink text-paper ' : 'bg-paper text-ink hover:bg-paper-2' }`}
+                className={`shrink-0 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${ statusFilter === status ? 'bg-ink text-paper ' : 'bg-paper text-ink hover:bg-paper-2' }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
@@ -476,13 +476,13 @@ export default function Deposits() {
 
       {/* Details Drawer */}
       {showDetails && selectedDeposit && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="flex-1 bg-black/40" onClick={() => setShowDetails(false)} />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDetails(false)} />
           <motion.div
-            initial={{ x: 40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 40, opacity: 0 }}
-            className="w-full max-w-xl bg-surface border-l border-rule p-6 overflow-y-auto"
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 24, opacity: 0 }}
+            className="relative h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-rule bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:h-full sm:max-w-xl sm:rounded-none sm:border-l sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -573,11 +573,11 @@ export default function Deposits() {
 
       {/* Edit Modal */}
       {showEditModal && selectedDeposit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="border border-rule bg-surface max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-rule bg-surface sm:rounded-none"
           >
             <div className="p-6 border-b border-rule">
               <h2 className="text-2xl font-bold text-ink-deep">Edit Deposit</h2>

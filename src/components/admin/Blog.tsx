@@ -671,22 +671,22 @@ export default function BlogManagement() {
               <table className="min-w-full divide-y divide-rule">
                 <thead className="bg-paper">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted sm:px-6">
                       Title
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="hidden px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted sm:table-cell">
                       Category
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="hidden px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted md:table-cell">
                       Author
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted sm:px-6">
                       Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="hidden px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted md:table-cell">
                       Created
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted sm:px-6">
                       Actions
                     </th>
                   </tr>
@@ -694,14 +694,14 @@ export default function BlogManagement() {
                 <tbody className="bg-surface divide-y divide-rule">
                   {posts.map((post) => (
                     <tr key={post.id} className="hover:bg-paper">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-ink-deep">{post.title}</div>
-                        <div className="text-sm text-muted">{post.slug}</div>
+                      <td className="px-3 py-4 sm:px-6">
+                        <div className="max-w-[12rem] text-sm font-medium text-ink-deep sm:max-w-none">{post.title}</div>
+                        <div className="max-w-[12rem] truncate text-sm text-muted sm:max-w-none">{post.slug}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="hidden px-6 py-4 whitespace-nowrap sm:table-cell">
                         <div className="text-sm text-ink-deep">{post.category?.name || 'Uncategorized'}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
+                      <td className="hidden px-6 py-4 whitespace-nowrap text-sm text-muted md:table-cell">
                         {post.author}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -709,10 +709,10 @@ export default function BlogManagement() {
                           {post.is_published ? 'Published' : 'Draft'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
+                      <td className="hidden px-6 py-4 whitespace-nowrap text-sm text-muted md:table-cell">
                         {new Date(post.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-3 py-4 text-right text-sm font-medium sm:px-6">
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => togglePublishStatus(post.id, post.is_published)}
@@ -830,10 +830,10 @@ export default function BlogManagement() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                       Slug
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="hidden px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted sm:table-cell">
                       Description
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <th scope="col" className="hidden px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted md:table-cell">
                       Created
                     </th>
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">
@@ -850,10 +850,10 @@ export default function BlogManagement() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                         {category.slug}
                       </td>
-                      <td className="px-6 py-4 text-sm text-muted">
+                      <td className="hidden px-6 py-4 text-sm text-muted sm:table-cell">
                         {category.description || 'No description'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
+                      <td className="hidden px-6 py-4 whitespace-nowrap text-sm text-muted md:table-cell">
                         {new Date(category.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

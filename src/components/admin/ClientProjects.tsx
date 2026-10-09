@@ -172,7 +172,32 @@ export default function AdminClientProjects() {
           ))}
         </div>
 
-        <div className="border border-rule bg-surface p-6">
+        {selected && (
+          <button
+            type="button"
+            className="fixed inset-0 z-20 bg-ink-deep/40 lg:hidden"
+            aria-label="Close project"
+            onClick={() => setSelected(null)}
+          />
+        )}
+        <div
+          className={
+            selected
+              ? 'fixed inset-x-0 bottom-0 z-30 max-h-[88dvh] overflow-y-auto rounded-t-3xl border border-rule bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-20px_50px_-30px_rgb(14_36_54/0.6)] lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:p-6 lg:shadow-none'
+              : 'hidden border border-rule bg-surface p-6 lg:block'
+          }
+        >
+          {selected && (
+            <div className="mb-4 flex justify-end lg:hidden">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="rounded-full border border-rule px-3 py-1.5 text-sm text-ink"
+              >
+                Close
+              </button>
+            </div>
+          )}
           {!selected ? (
             <p className="text-sm text-muted">Select a project to update status, quote a total, and request installments.</p>
           ) : (

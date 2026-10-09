@@ -54,6 +54,14 @@ select:focus {
   display: none;
 }
 
+@media (max-width: 767px) {
+  .admin-shell input,
+  .admin-shell select,
+  .admin-shell textarea {
+    font-size: 16px;
+  }
+}
+
 .lift-card {
   position: relative;
   border-radius: 1rem;
